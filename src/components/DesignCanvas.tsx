@@ -27,6 +27,8 @@ interface DesignCanvasProps {
     deleteObject: (object: fabric.Object) => void;
     loadVectorData?: (data: string) => void;
     canvas: fabric.Canvas;
+    onDragStart?: () => void;
+    onDragEnd?: () => void;
   }) => void;
   vectorData?: string;
 }
@@ -236,20 +238,21 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
     }
   }, [isDesignLoaded, updateTexture, decorations]);
 
-  const addText = useCallback(() => {
+  const addText = useCallback((position?: { x: number, y: number }) => {
     if (fabricCanvasRef.current) {
+      const canvas = fabricCanvasRef.current;
       const text = new fabric.IText('Edit me', {
-        left: 100,
-        top: 100,
+        left: position ? position.x * canvas.width! : 100,
+        top: position ? position.y * canvas.height! : 100,
         fontSize: 24,
         fontFamily: 'Arial',
         fill: '#000000',
-        editable: false,
+        editable: true,
         lockSkewingX: true,
         lockSkewingY: true,
         centeredScaling: true,
-        scaleX:0.5,
-        scaleY:0.5,
+        scaleX: 0.5,
+        scaleY: 0.5,
         snapAngle: 5,
         cornerStyle: 'circle',
         transparentCorners: false,
@@ -259,9 +262,10 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
         borderColor: '#1976D2',
         borderScaleFactor: 2
       });
-      fabricCanvasRef.current.add(text);
-      fabricCanvasRef.current.setActiveObject(text);
-      fabricCanvasRef.current.renderAll();
+      
+      canvas.add(text);
+      canvas.setActiveObject(text);
+      canvas.renderAll();
       controlsRef.current.onObjectAdded?.(text);
       updateTexture();
     }
@@ -546,6 +550,7 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
       };
       onInit(controls);
       controlsRef.current = controls;
+      selectionChangeCallbackRef.current = controls.onSelectionChange;
 
       setIsCanvasReady(true);
 
@@ -631,35 +636,67 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
         }
       };
 
-      const handleInteraction = (e: any) => {
-        if (e.target) {
-          debouncedUpdateObjectState(e.target);
-        }
+      const handleDragStart = () => {
+        controlsRef.current.onDragStart?.();
       };
 
+      const handleDragEnd = () => {
+        controlsRef.current.onDragEnd?.();
+      };
+
+      // Track if we're currently dragging
+      let isDragging = false;
+
       canvas.on({
-        'object:modified': handleModification,
-        'object:moved': handleModification,
-        'object:scaled': handleModification,
-        'object:rotated': handleModification,
-        'text:changed': handleModification,
-        'object:moving': handleInteraction,
-        'object:scaling': handleInteraction,
-        'object:rotating': handleInteraction
+        'mouse:down': (e: fabric.IEvent<MouseEvent>) => {
+          const target = e.target;
+          if (target && (target.type === 'i-text' || target.type === 'image')) {
+            console.log('Starting drag operation');
+            isDragging = true;
+            e.e.preventDefault();
+            e.e.stopPropagation();
+            controlsRef.current.onDragStart?.();
+          }
+        },
+        'object:moving': (e: fabric.IEvent<MouseEvent>) => {
+          if (isDragging) {
+            console.log('Object moving while dragging');
+            e.e.preventDefault();
+            e.e.stopPropagation();
+            handleModification(e);
+            handleInteraction(e);
+          }
+        },
+        'mouse:up': (e: fabric.IEvent<MouseEvent>) => {
+          if (isDragging) {
+            console.log('Ending drag operation');
+            isDragging = false;
+            e.e.preventDefault();
+            e.e.stopPropagation();
+            controlsRef.current.onDragEnd?.();
+            canvas.renderAll();
+            updateTexture();
+          }
+        },
+        'selection:cleared': () => {
+          if (isDragging) {
+            console.log('Selection cleared while dragging');
+            isDragging = false;
+            controlsRef.current.onDragEnd?.();
+            canvas.renderAll();
+            updateTexture();
+          }
+        }
       });
 
       return () => {
+        isDragging = false;
         canvas.off({
-          'object:modified': handleModification,
-          'object:moved': handleModification,
-          'object:scaled': handleModification,
-          'object:rotated': handleModification,
-          'text:changed': handleModification,
-          'object:moving': handleInteraction,
-          'object:scaling': handleInteraction,
-          'object:rotating': handleInteraction
+          'mouse:down': handleDragStart,
+          'object:moving': handleModification,
+          'mouse:up': handleDragEnd,
+          'selection:cleared': handleDragEnd
         });
-        debouncedUpdateObjectState.cancel();
       };
     }
   }, [updateObjectState, debouncedUpdateObjectState, updateTexture]);

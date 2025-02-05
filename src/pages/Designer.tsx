@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Canvas3D } from '../components/Canvas3D';
 import { DesignCanvas } from '../components/DesignCanvas';
@@ -21,12 +21,17 @@ export const Designer: React.FC = () => {
   const [selectedObject, setSelectedObject] = useState<fabric.Object | null>(null);
   const [fabricCanvas, setFabricCanvas] = useState<fabric.Canvas | null>(null);
   const [designControls, setDesignControls] = useState<{
-    addText: () => void;
+    addText: (position?: { x: number, y: number }) => void;
     addImage: (file: File) => void;
     handleInteraction: (point: { x: number, y: number }) => void;
     updateObject: (updates: Partial<fabric.Object>) => void;
     deleteObject: (object: fabric.Object) => void;
+    onDragStart?: () => void;
+    onDragEnd?: () => void;
   } | null>(null);
+  const [isPlacingText, setIsPlacingText] = useState(false);
+  const [isDraggingText, setIsDraggingText] = useState(false);
+  const [isScreenshotting, setIsScreenshotting] = useState(false);
 
   const decorations = useSelector((state: RootState) => state.decorations.items);
 
@@ -35,21 +40,41 @@ export const Designer: React.FC = () => {
   }, []);
 
   const handleDesignInit = useCallback((controls: {
-    addText: () => void;
+    addText: (position?: { x: number, y: number }) => void;
     addImage: (file: File) => void;
     handleInteraction: (point: { x: number, y: number }) => void;
     updateObject: (updates: Partial<fabric.Object>) => void;
     deleteObject: (object: fabric.Object) => void;
-    onSelectionChange?: (hasSelection: boolean) => void;
-    onObjectSelected?: (object: fabric.Object | null) => void;
-    onObjectAdded?: (object: fabric.Object) => void;
-    onObjectRemoved?: (object: fabric.Object) => void;
-    canvas: fabric.Canvas; // Make canvas required
+    onDragStart?: () => void;
+    onDragEnd?: () => void;
   }) => {
     setDesignControls(controls);
-    setFabricCanvas(controls.canvas); // Store the canvas reference
+    setFabricCanvas(controls.canvas);
     controls.onSelectionChange = setHasSelection;
     controls.onObjectSelected = setSelectedObject;
+    
+    // Create stable drag handlers that won't be affected by state updates
+    const handleDragStart = () => {
+      console.log('Drag started - forcing disable');
+      setIsDraggingText(true);
+      if (controlsRef.current) {
+        controlsRef.current.enabled = false;
+        controlsRef.current.update();
+      }
+    };
+
+    const handleDragEnd = () => {
+      console.log('Drag ended - re-enabling');
+      setIsDraggingText(false);
+      if (controlsRef.current) {
+        controlsRef.current.enabled = true;
+        controlsRef.current.update();
+      }
+    };
+
+    controls.onDragStart = handleDragStart;
+    controls.onDragEnd = handleDragEnd;
+    
     controls.onObjectAdded = (object: fabric.Object) => {
       if (!object.id) {
         const id = Math.random().toString(36).substr(2, 9);
@@ -85,20 +110,53 @@ export const Designer: React.FC = () => {
     };
   }, [dispatch]);
 
+  const handleAddText = () => {
+    setIsPlacingText(true);
+    setView('3D'); // Force 3D view when adding text
+  };
+
   const handleInteract = useCallback((uv: { x: number, y: number }) => {
-    if (designControls) {
+    if (isPlacingText && designControls) {
+      designControls.addText(uv); // We'll modify this function to accept position
+      setIsPlacingText(false);
+    } else if (designControls && !isPlacingText) {
       designControls.handleInteraction(uv);
     }
-  }, [designControls]);
+  }, [designControls, isPlacingText]);
+
+  useEffect(() => {
+    console.log('Controls disabled:', isPlacingText || isDraggingText);
+  }, [isPlacingText, isDraggingText]);
+
+  const handleScreenshot = useCallback(async () => {
+    setIsScreenshotting(true);
+    // Wait for camera reset
+    await new Promise(resolve => setTimeout(resolve, 100));
+    const canvas = document.querySelector('canvas');
+    const screenshot = canvas?.toDataURL('image/png');
+    setIsScreenshotting(false);
+    return screenshot;
+  }, []);
 
   return (
     <div className="flex h-[calc(100vh-64px)]">
       <div className="flex-1 relative">
-        <div className={`absolute inset-0 transition-opacity duration-300 ${view === '3D' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+        {isPlacingText && (
+          <div className="absolute inset-0 z-10 pointer-events-none">
+            <div className="p-4 bg-black bg-opacity-50 text-white rounded-md inline-block">
+              Click on the model to place text
+            </div>
+          </div>
+        )}
+        <div className={`absolute inset-0 transition-opacity duration-300 
+          ${view === '3D' ? 'opacity-100' : 'opacity-0'} 
+          ${isPlacingText ? 'cursor-crosshair' : ''}`}>
           <Canvas3D 
             canvasTexture={canvasTexture} 
             onInteract={handleInteract}
             hasSelection={hasSelection}
+            disableControls={isPlacingText || isDraggingText}
+            isScreenshotting={isScreenshotting}
           />
         </div>
         <div className={`absolute inset-0 transition-opacity duration-300 ${view === '2D' ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
@@ -121,11 +179,11 @@ export const Designer: React.FC = () => {
       </div>
       <div className="h-full">
         <Sidebar 
-          onAddText={() => designControls?.addText()}
+          onAddText={handleAddText}
           onAddImage={(file) => designControls?.addImage(file)}
           currentView={view}
           selectedObject={selectedObject}
-          fabricCanvas={fabricCanvas} // Pass the canvas reference
+          fabricCanvas={fabricCanvas}
           onSelectDecoration={(id) => {
             setView('3D');
             if (designControls) {
@@ -182,6 +240,7 @@ export const Designer: React.FC = () => {
               }));
             }
           }}
+          onTakeScreenshot={handleScreenshot}
         />
       </div>
     </div>

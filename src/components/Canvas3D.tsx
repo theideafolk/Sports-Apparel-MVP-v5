@@ -4,11 +4,15 @@ import { OrbitControls } from '@react-three/drei';
 import { Cube } from './Cube';
 import { ZoomIn, ZoomOut } from 'lucide-react';
 import { CanvasTexture, Vector2 } from 'three';
+import * as THREE from 'three';
+import { OrbitControls as OrbitControlsThree } from 'three/examples/jsm/controls/OrbitControls';
 
 interface Canvas3DProps {
-  canvasTexture?: CanvasTexture | null;
-  onInteract?: (uv: { x: number, y: number }) => void;
-  hasSelection?: boolean;
+  canvasTexture: THREE.Texture | null;
+  onInteract: (point: { x: number; y: number }) => void;
+  hasSelection: boolean;
+  disableControls: boolean;
+  isScreenshotting: boolean;
 }
 
 const normalizeCoordinates = (event: MouseEvent, element: HTMLElement) => {
@@ -19,16 +23,51 @@ const normalizeCoordinates = (event: MouseEvent, element: HTMLElement) => {
   );
 };
 
-export const Canvas3D: React.FC<Canvas3DProps> = ({ canvasTexture, onInteract, hasSelection }) => {
-  const controlsRef = useRef<any>(null);
+export const Canvas3D: React.FC<Canvas3DProps> = ({
+  canvasTexture,
+  onInteract,
+  hasSelection,
+  disableControls,
+  isScreenshotting
+}) => {
+  const controlsRef = useRef<OrbitControlsThree>();
+  const defaultCameraPosition = useRef({
+    position: new THREE.Vector3(0, 0, 6),
+    target: new THREE.Vector3(0, 0, 0)
+  });
   const [zoom, setZoom] = useState(5);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (controlsRef.current) {
-      controlsRef.current.enabled = !hasSelection;
+    const controls = controlsRef.current;
+    if (controls) {
+      controls.enabled = !disableControls;
+      controls.enableRotate = !disableControls;
+      controls.enableZoom = !disableControls;
+      controls.enablePan = !disableControls;
+      controls.update();
     }
-  }, [hasSelection]);
+  }, [disableControls]);
+
+  // Reset camera to default position when taking screenshot
+  useEffect(() => {
+    if (isScreenshotting && controlsRef.current) {
+      const controls = controlsRef.current;
+      controls.object.position.copy(defaultCameraPosition.current.position);
+      controls.target.copy(defaultCameraPosition.current.target);
+      controls.update();
+    }
+  }, [isScreenshotting]);
+
+  // Store initial camera position
+  useEffect(() => {
+    if (controlsRef.current) {
+      defaultCameraPosition.current = {
+        position: controlsRef.current.object.position.clone(),
+        target: controlsRef.current.target.clone()
+      };
+    }
+  }, []);
 
   const handleZoom = useCallback((delta: number) => {
     setZoom(prev => {
@@ -56,11 +95,14 @@ export const Canvas3D: React.FC<Canvas3DProps> = ({ canvasTexture, onInteract, h
           intensity={0.3}
         />
         <OrbitControls
-          makeDefault 
-          enableDamping
-          enabled={!hasSelection}
-          dampingFactor={0.05}
           ref={controlsRef}
+          makeDefault={false}
+          enableDamping={!disableControls}
+          enabled={!disableControls}
+          enableRotate={!disableControls}
+          enableZoom={!disableControls}
+          enablePan={!disableControls}
+          dampingFactor={0.05}
         />
         <Cube 
           canvasTexture={canvasTexture}

@@ -22,6 +22,7 @@ interface SidebarProps {
   onDeleteDecoration: (id: string) => void;
   onUpdateSelectedObject?: (updates: Partial<fabric.Object> | null) => void;
   fabricCanvas: fabric.Canvas | null;
+  onTakeScreenshot: () => Promise<string | undefined>;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
@@ -32,7 +33,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectDecoration,
   onDeleteDecoration,
   onUpdateSelectedObject,
-  fabricCanvas
+  fabricCanvas,
+  onTakeScreenshot
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -42,8 +44,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [showColorPalette, setShowColorPalette] = useState(false);
   const [showModelSelector, setShowModelSelector] = useState(false);
   const isTextObject = selectedObject?.type === 'i-text';
-  const isImageObject = selectedObject?.type === 'image';
-
+  const [view, setView] = useState<'2D' | '3D'>('2D');
   const selectedDesign = useSelector((state: RootState) => 
     state.designs.designs.find(d => d.id === state.designs.selectedDesignId)
   );
@@ -67,6 +68,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const handleSaveDesign = async () => {
     if (!selectedDesign || !fabricCanvas) return;
+    
+    // Store current view state
+    const currentView = view;
+    
+    // Force 3D view and take screenshot
+    setView('3D');
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const preview = await onTakeScreenshot() || '';
+    
+    // Restore previous view
+    setView(currentView);
 
     const objects = fabricCanvas.getObjects();
     const updatedDecorations = objects
@@ -108,9 +121,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }
       });
 
-    const canvas = document.querySelector('canvas');
-    if (!canvas) return;
-    const preview = canvas.toDataURL('image/png');
     const vectorData = JSON.stringify(fabricCanvas.toJSON(['id', 'data', 'opacity']));
 
     const savedDesign = {
@@ -133,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex-1">
         <div className="flex md:block items-center justify-between">
           <h2 className="text-xl font-bold md:mb-4">
-            {isTextObject || isImageObject ? (
+            {isTextObject ? (
               <button 
                 onClick={handleBackClick}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
@@ -146,7 +156,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </h2>
         
-          {!isTextObject && !isImageObject && <div className="flex md:block space-x-4 md:space-x-0 md:space-y-4">
+          {!isTextObject && <div className="flex md:block space-x-4 md:space-x-0 md:space-y-4">
             <button 
               onClick={onAddText}
               className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded"
@@ -192,7 +202,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>}
         </div>
 
-        {showColorPalette && !isTextObject && !isImageObject && (
+        {showColorPalette && !isTextObject && (
           <div className="mt-6 border-t pt-6">
             <ColorPalette />
           </div>
@@ -220,23 +230,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
 
-        {isImageObject && selectedObject && onUpdateSelectedObject && (
-          <div className="mt-6 border-t pt-6">
-            <h3 className="text-lg font-semibold mb-4">Image Properties</h3>
-            <ImageControls
-              currentOpacity={selectedObject.opacity || 1}
-              onOpacityChange={(opacity) => {
-                if (fabricCanvas) {
-                  selectedObject.set({ opacity });
-                  fabricCanvas.renderAll();
-                  onUpdateSelectedObject({ opacity });
-                }
-              }}
-            />
-          </div>
-        )}
-
-        {!isTextObject && !isImageObject && <div className="hidden md:block mt-8">
+        {!isTextObject && <div className="hidden md:block mt-8">
           <h3 className="text-lg font-semibold mb-4">Decorations</h3>
           <DecorationsList
             decorations={decorationsList}
