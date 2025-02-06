@@ -23,6 +23,7 @@ interface SidebarProps {
   onUpdateSelectedObject?: (updates: Partial<fabric.Object> | null) => void;
   fabricCanvas: fabric.Canvas | null;
   onTakeScreenshot: () => Promise<string | undefined>;
+  hasSelection: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
@@ -34,17 +35,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onDeleteDecoration,
   onUpdateSelectedObject,
   fabricCanvas,
-  onTakeScreenshot
+  onTakeScreenshot,
+  hasSelection
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const currentSaveId = useSelector((state: RootState) => state.cart.currentSaveId);
+  const currentSaveId = useSelector((state: RootState) => state.designs.currentSaveId);
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [showDesignSelector, setShowDesignSelector] = useState(false);
   const [showColorPalette, setShowColorPalette] = useState(false);
   const [showModelSelector, setShowModelSelector] = useState(false);
   const isTextObject = selectedObject?.type === 'i-text';
-  const [view, setView] = useState<'2D' | '3D'>('2D');
+  const [view, setView] = useState(currentView);
   const selectedDesign = useSelector((state: RootState) => 
     state.designs.designs.find(d => d.id === state.designs.selectedDesignId)
   );
@@ -67,75 +69,85 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }));
 
   const handleSaveDesign = async () => {
-    if (!selectedDesign || !fabricCanvas) return;
-    
-    // Store current view state
-    const currentView = view;
-    
-    // Force 3D view and take screenshot
-    setView('3D');
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    const preview = await onTakeScreenshot() || '';
-    
-    // Restore previous view
-    setView(currentView);
+    console.log('Save design initiated');
+    if (!selectedDesign || !fabricCanvas) {
+      console.log('Missing required data:', { selectedDesign, fabricCanvas });
+      return;
+    }
 
-    const objects = fabricCanvas.getObjects();
-    const updatedDecorations = objects
-      .filter(obj => !obj.data?.isBackground && obj.id)
-      .map(obj => {
-        const baseProperties = {
-          left: obj.left || 0,
-          top: obj.top || 0,
-          scaleX: obj.scaleX || 1,
-          scaleY: obj.scaleY || 1,
-          angle: obj.angle || 0,
-          opacity: obj.opacity || 1
-        };
+    try {
+      // Store current view state
+      const currentView = view;
+      
+      // Force 3D view and take screenshot
+      setView('3D');
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const preview = await onTakeScreenshot() || '';
+      console.log('Screenshot taken:', preview.slice(0, 50) + '...');
+      
+      // Restore previous view
+      setView(currentView);
 
-        if (obj.type === 'i-text') {
-          const textObj = obj as fabric.IText;
-          return {
-            id: obj.id!,
-            type: 'text' as const,
-            properties: {
-              ...baseProperties,
-              text: textObj.text || '',
-              fontFamily: textObj.fontFamily || 'Arial',
-              fill: textObj.fill as string || '#000000',
-              strokeWidth: textObj.strokeWidth || 0,
-              stroke: textObj.stroke || '#000000'
-            }
+      const objects = fabricCanvas.getObjects();
+      const updatedDecorations = objects
+        .filter(obj => !obj.data?.isBackground && obj.id)
+        .map(obj => {
+          const baseProperties = {
+            left: obj.left || 0,
+            top: obj.top || 0,
+            scaleX: obj.scaleX || 1,
+            scaleY: obj.scaleY || 1,
+            angle: obj.angle || 0,
+            opacity: obj.opacity || 1
           };
-        } else {
-          const imgObj = obj as fabric.Image;
-          return {
-            id: obj.id!,
-            type: 'image' as const,
-            properties: {
-              ...baseProperties,
-              src: imgObj.getSrc()
-            }
-          };
-        }
-      });
 
-    const vectorData = JSON.stringify(fabricCanvas.toJSON(['id', 'data', 'opacity']));
+          if (obj.type === 'i-text') {
+            const textObj = obj as fabric.IText;
+            return {
+              id: obj.id!,
+              type: 'text' as const,
+              properties: {
+                ...baseProperties,
+                text: textObj.text || '',
+                fontFamily: textObj.fontFamily || 'Arial',
+                fill: textObj.fill as string || '#000000',
+                strokeWidth: textObj.strokeWidth || 0,
+                stroke: textObj.stroke || '#000000'
+              }
+            };
+          } else {
+            const imgObj = obj as fabric.Image;
+            return {
+              id: obj.id!,
+              type: 'image' as const,
+              properties: {
+                ...baseProperties,
+                src: imgObj.getSrc()
+              }
+            };
+          }
+        });
 
-    const savedDesign = {
-      id: Date.now().toString(),
-      saveId: currentSaveId,
-      timestamp: Date.now(),
-      design: selectedDesign,
-      pathColors,
-      decorations: updatedDecorations,
-      preview,
-      vectorData,
-    };
+      const vectorData = JSON.stringify(fabricCanvas.toJSON(['id', 'data', 'opacity']));
 
-    dispatch(addToCart(savedDesign));
-    navigate('/cart');
+      const savedDesign = {
+        id: Date.now().toString(),
+        saveId: currentSaveId,
+        timestamp: Date.now(),
+        design: selectedDesign,
+        pathColors,
+        decorations: updatedDecorations,
+        preview,
+        vectorData,
+      };
+
+      console.log('Dispatching to cart:', savedDesign);
+      dispatch(addToCart(savedDesign));
+      navigate('/cart');
+    } catch (error) {
+      console.error('Error saving design:', error);
+    }
   };
 
   return (
@@ -262,13 +274,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
-      <button
-        onClick={handleSaveDesign}
-        className="w-full bg-black text-white py-4 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center space-x-2 mt-4"
-      >
-        <ShoppingCart className="w-5 h-5" />
-        <span>SAVE MY DESIGN</span>
-      </button>
+      <div className="p-4 border-t mt-auto">
+        <button
+          onClick={handleSaveDesign}
+          disabled={hasSelection}
+          className={`w-full px-4 py-2 rounded-md transition-colors ${
+            hasSelection 
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+              : 'bg-blue-500 hover:bg-blue-600 text-white'
+          }`}
+        >
+          {hasSelection ? "Deselect to Save" : "Save My Design"}
+        </button>
+      </div>
     </div>
   );
 };

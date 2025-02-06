@@ -28,6 +28,7 @@ export const Designer: React.FC = () => {
     deleteObject: (object: fabric.Object) => void;
     onDragStart?: () => void;
     onDragEnd?: () => void;
+    onSelectionChange?: (hasSelection: boolean) => void;
   } | null>(null);
   const [isPlacingText, setIsPlacingText] = useState(false);
   const [isDraggingText, setIsDraggingText] = useState(false);
@@ -47,10 +48,14 @@ export const Designer: React.FC = () => {
     deleteObject: (object: fabric.Object) => void;
     onDragStart?: () => void;
     onDragEnd?: () => void;
+    onSelectionChange?: (hasSelection: boolean) => void;
   }) => {
     setDesignControls(controls);
     setFabricCanvas(controls.canvas);
-    controls.onSelectionChange = setHasSelection;
+    controls.onSelectionChange = (hasSelection) => {
+      console.log('Selection changed:', hasSelection);
+      setHasSelection(hasSelection);
+    };
     controls.onObjectSelected = setSelectedObject;
     
     // Create stable drag handlers that won't be affected by state updates
@@ -130,7 +135,6 @@ export const Designer: React.FC = () => {
 
   const handleScreenshot = useCallback(async () => {
     setIsScreenshotting(true);
-    // Wait for camera reset
     await new Promise(resolve => setTimeout(resolve, 100));
     const canvas = document.querySelector('canvas');
     const screenshot = canvas?.toDataURL('image/png');
@@ -177,72 +181,71 @@ export const Designer: React.FC = () => {
           )}
         </button>
       </div>
-      <div className="h-full">
-        <Sidebar 
-          onAddText={handleAddText}
-          onAddImage={(file) => designControls?.addImage(file)}
-          currentView={view}
-          selectedObject={selectedObject}
-          fabricCanvas={fabricCanvas}
-          onSelectDecoration={(id) => {
-            setView('3D');
-            if (designControls) {
-              const decoration = decorations.find(d => d.id === id);
-              if (decoration) {
-                designControls.updateObject(decoration.properties);
-                designControls.handleInteraction({
-                  x: decoration.properties.left / 500,
-                  y: decoration.properties.top / 500,
-                  type: 'mousedown',
-                  clientX: 0,
-                  clientY: 0
-                });
-                dispatch(setSelectedDecoration(id));
-              }
+      <Sidebar 
+        onAddText={handleAddText}
+        onAddImage={(file) => designControls?.addImage(file)}
+        currentView={view}
+        selectedObject={selectedObject}
+        fabricCanvas={fabricCanvas}
+        onSelectDecoration={(id) => {
+          setView('3D');
+          if (designControls) {
+            const decoration = decorations.find(d => d.id === id);
+            if (decoration) {
+              designControls.updateObject(decoration.properties);
+              designControls.handleInteraction({
+                x: decoration.properties.left / 500,
+                y: decoration.properties.top / 500,
+                type: 'mousedown',
+                clientX: 0,
+                clientY: 0
+              });
+              dispatch(setSelectedDecoration(id));
             }
-          }}
-          onDeleteDecoration={(id) => {
-            if (designControls) {
-              dispatch(removeDecoration(id));
+          }
+        }}
+        onDeleteDecoration={(id) => {
+          if (designControls) {
+            dispatch(removeDecoration(id));
+          }
+        }}
+        onUpdateSelectedObject={(updates) => {
+          if (designControls && selectedObject && selectedObject.id) {
+            if (updates === null) {
+              designControls.updateObject(null);
+              return;
             }
-          }}
-          onUpdateSelectedObject={(updates) => {
-            if (designControls && selectedObject && selectedObject.id) {
-              if (updates === null) {
-                designControls.updateObject(null);
-                return;
-              }
-              
-              // Apply updates to the selected object first
-              selectedObject.set(updates);
-              fabricCanvas?.renderAll();
+            
+            // Apply updates to the selected object first
+            selectedObject.set(updates);
+            fabricCanvas?.renderAll();
 
-              designControls.updateObject(updates);
-              dispatch(updateDecoration({
-                id: selectedObject.id,
-                properties: {
-                  ...(selectedObject.type === 'i-text' ? {
-                    text: updates.text || (selectedObject as fabric.IText).text,
-                    fontFamily: (selectedObject as fabric.IText).fontFamily,
-                    fill: (selectedObject as fabric.IText).fill as string,
-                    strokeWidth: (selectedObject as fabric.IText).strokeWidth,
-                    stroke: (selectedObject as fabric.IText).stroke,
-                  } : {
-                    src: (selectedObject as fabric.Image).getSrc(),
-                  }),
-                  left: selectedObject.left,
-                  top: selectedObject.top,
-                  scaleX: selectedObject.scaleX,
-                  scaleY: selectedObject.scaleY,
-                  angle: selectedObject.angle,
-                  ...updates
-                }
-              }));
-            }
-          }}
-          onTakeScreenshot={handleScreenshot}
-        />
-      </div>
+            designControls.updateObject(updates);
+            dispatch(updateDecoration({
+              id: selectedObject.id,
+              properties: {
+                ...(selectedObject.type === 'i-text' ? {
+                  text: updates.text || (selectedObject as fabric.IText).text,
+                  fontFamily: (selectedObject as fabric.IText).fontFamily,
+                  fill: (selectedObject as fabric.IText).fill as string,
+                  strokeWidth: (selectedObject as fabric.IText).strokeWidth,
+                  stroke: (selectedObject as fabric.IText).stroke,
+                } : {
+                  src: (selectedObject as fabric.Image).getSrc(),
+                }),
+                left: selectedObject.left,
+                top: selectedObject.top,
+                scaleX: selectedObject.scaleX,
+                scaleY: selectedObject.scaleY,
+                angle: selectedObject.angle,
+                ...updates
+              }
+            }));
+          }
+        }}
+        onTakeScreenshot={handleScreenshot}
+        hasSelection={hasSelection}
+      />
     </div>
   );
 };
