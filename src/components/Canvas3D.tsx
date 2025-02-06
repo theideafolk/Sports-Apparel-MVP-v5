@@ -69,6 +69,14 @@ export const Canvas3D: React.FC<Canvas3DProps> = ({
     }
   }, []);
 
+  // Update controls enabled state when selection changes
+  useEffect(() => {
+    if (controlsRef.current) {
+      controlsRef.current.enabled = !hasSelection && !disableControls;
+      controlsRef.current.update();
+    }
+  }, [hasSelection, disableControls]);
+
   const handleZoom = useCallback((delta: number) => {
     setZoom(prev => {
       const newZoom = Math.max(2, Math.min(10, prev + delta));
@@ -76,6 +84,15 @@ export const Canvas3D: React.FC<Canvas3DProps> = ({
       return newZoom;
     });
   }, []);
+
+  // Handle mouse interactions
+  const handleMouseDown = useCallback((event: MouseEvent) => {
+    if (hasSelection || disableControls) {
+      // Prevent interaction when object is selected
+      return;
+    }
+    // ... rest of the mouse handling logic
+  }, [hasSelection, disableControls, onInteract]);
 
   return (
     <div className="relative w-full h-full">
