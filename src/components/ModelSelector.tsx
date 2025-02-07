@@ -2,19 +2,26 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { X } from 'lucide-react';
 import type { RootState } from '../store/store';
-import { setSelectedModel } from '../store/modelsSlice';
+import { setSelectedModel, selectModel } from '../store/modelsSlice';
+import { AppDispatch } from '../store/store';
 
 interface ModelSelectorProps {
   onClose: () => void;
 }
 
 export const ModelSelector: React.FC<ModelSelectorProps> = ({ onClose }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const selectedProductType = useSelector((state: RootState) => state.designs.selectedProductType);
   const models = useSelector((state: RootState) => 
     state.models.models.filter(m => m.productType === selectedProductType)
   );
   const selectedModelId = useSelector((state: RootState) => state.models.selectedModelId);
+
+  const handleModelSelect = (modelId: string) => {
+    console.log('Selecting model:', modelId);
+    dispatch(selectModel(modelId));
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -33,10 +40,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({ onClose }) => {
           {models.map((model) => (
             <button
               key={model.id}
-              onClick={() => {
-                dispatch(setSelectedModel(model.id));
-                onClose();
-              }}
+              onClick={() => handleModelSelect(model.id)}
               className={`relative aspect-square rounded-lg border-2 transition-all hover:border-indigo-500 p-4 ${
                 selectedModelId === model.id 
                   ? 'border-indigo-600 shadow-lg' 

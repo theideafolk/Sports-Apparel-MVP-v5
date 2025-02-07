@@ -5,6 +5,7 @@ export interface Design {
   name: string;
   path: string;
   productType: 'jersey' | 'sock';
+  modelId: string;
   isDefault?: boolean;
 }
 
@@ -12,21 +13,72 @@ interface DesignsState {
   designs: Design[];
   selectedDesignId: string;
   selectedProductType: 'jersey' | 'sock';
+  models: {
+    models: {
+      id: string;
+      productType: 'jersey' | 'sock';
+      isDefault: boolean;
+    }[];
+  };
 }
 
 const initialState: DesignsState = {
   designs: [
     { 
-      id: 'jersey-classic', 
-      name: 'Classic', 
-      path: '/dist/assets/Designs/Jersey/Classic.svg',
+      id: 'jersey-classic',
+      name: 'Classic',
+      path: '/dist/assets/Designs/Jersey/Soccer_Jersey/Classic.svg',
       productType: 'jersey',
+      modelId: 'jersey_1',
       isDefault: true
     },
     { 
       id: 'jersey-tiger', 
       name: 'Tiger', 
-      path: '/dist/assets/Designs/Jersey/Tiger.svg',
+      path: '/dist/assets/Designs/Jersey/Soccer_Jersey/Tiger.svg',
+      modelId: 'jersey_1',
+      productType: 'jersey'
+    },
+    { 
+      id: 'jersey-bones', 
+      name: 'Bones', 
+      path: '/dist/assets/Designs/Jersey/Roundneck_Jersey/Bones.svg',
+      modelId: 'jersey_4',
+      productType: 'jersey'
+    },
+    { 
+      id: 'jersey-dynamic', 
+      name: 'Dynamic', 
+      path: '/dist/assets/Designs/Jersey/Roundneck_Jersey/Dynamic.svg',
+      modelId: 'jersey_4',
+      productType: 'jersey'
+    },
+    { 
+      id: 'jersey-warrior', 
+      name: 'Warrior', 
+      path: '/dist/assets/Designs/Jersey/Roundneck_Jersey/Warrior.svg',
+      modelId: 'jersey_4',
+      productType: 'jersey'
+    },
+    { 
+      id: 'jersey-pinstripes', 
+      name: 'Pinstripes', 
+      path: '/dist/assets/Designs/Jersey/Softball_Jersey/Pinstripes.svg',
+      modelId: 'jersey_3',
+      productType: 'jersey'
+    },
+    { 
+      id: 'jersey-stripes', 
+      name: 'Stripes', 
+      path: '/dist/assets/Designs/Jersey/Softball_Jersey/Stripes.svg',
+      modelId: 'jersey_3',
+      productType: 'jersey'
+    },
+    { 
+      id: 'jersey-velocity', 
+      name: 'Velocity', 
+      path: '/dist/assets/Designs/Jersey/Softball_Jersey/Velocity.svg',
+      modelId: 'jersey_3',
       productType: 'jersey'
     },
     { 
@@ -34,11 +86,26 @@ const initialState: DesignsState = {
       name: 'Lines', 
       path: '/dist/assets/Designs/Sock/lines.svg',
       productType: 'sock',
+      modelId: 'socks_1',
       isDefault: true
     },
   ],
   selectedDesignId: 'jersey-classic',
   selectedProductType: 'jersey',
+  models: {
+    models: [
+      {
+        id: 'jersey_1',
+        productType: 'jersey',
+        isDefault: true
+      },
+      {
+        id: 'socks_1',
+        productType: 'sock',
+        isDefault: true
+      },
+    ],
+  },
 };
 
 export const designsSlice = createSlice({
@@ -47,12 +114,24 @@ export const designsSlice = createSlice({
   reducers: {
     setSelectedProductType: (state, action: PayloadAction<'jersey' | 'sock'>) => {
       state.selectedProductType = action.payload;
-      // Select the default design for this product type
-      const defaultDesign = state.designs.find(d => 
-        d.productType === action.payload && d.isDefault
+      
+      // Find default model for this product type
+      const defaultModel = state.models.models.find(m => 
+        m.productType === action.payload && 
+        m.isDefault
       );
-      if (defaultDesign) {
-        state.selectedDesignId = defaultDesign.id;
+      
+      if (defaultModel) {
+        // Find default design for this model
+        const defaultDesign = state.designs.find(d => 
+          d.productType === action.payload && 
+          d.modelId === defaultModel.id && 
+          d.isDefault
+        );
+        
+        if (defaultDesign) {
+          state.selectedDesignId = defaultDesign.id;
+        }
       }
     },
     setSelectedDesign: (state, action: PayloadAction<string>) => {

@@ -11,8 +11,14 @@ interface DesignSelectorProps {
 
 export const DesignSelector: React.FC<DesignSelectorProps> = ({ onClose, productType }) => {
   const dispatch = useDispatch();
+  const selectedModelId = useSelector((state: RootState) => state.models.selectedModelId);
+  
+  // Filter designs by both productType and modelId
   const designs = useSelector((state: RootState) => 
-    state.designs.designs.filter(d => d.productType === productType)
+    state.designs.designs.filter(d => 
+      d.productType === productType && 
+      d.modelId === selectedModelId
+    )
   );
   const selectedDesignId = useSelector((state: RootState) => state.designs.selectedDesignId);
 
