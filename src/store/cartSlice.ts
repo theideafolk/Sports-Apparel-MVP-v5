@@ -8,6 +8,7 @@ export interface SavedDesign {
   saveId: string | null; // Track if this is a new design or editing existing
   timestamp: number;
   design: Design;
+  modelPath: string; // Add model path
   pathColors: PathColor[];
   decorations: Decoration[];
   preview: string;

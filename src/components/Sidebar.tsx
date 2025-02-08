@@ -24,6 +24,7 @@ interface SidebarProps {
   fabricCanvas: fabric.Canvas | null;
   onTakeScreenshot: () => Promise<string | undefined>;
   hasSelection: boolean;
+  pathColors: string[];
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ 
@@ -36,23 +37,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onUpdateSelectedObject,
   fabricCanvas,
   onTakeScreenshot,
-  hasSelection
+  hasSelection,
+  pathColors
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const currentSaveId = useSelector((state: RootState) => state.designs.currentSaveId);
+  const currentSaveId = useSelector((state: RootState) => state.cart.currentSaveId);
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [showDesignSelector, setShowDesignSelector] = useState(false);
   const [showColorPalette, setShowColorPalette] = useState(false);
   const [showModelSelector, setShowModelSelector] = useState(false);
   const isTextObject = selectedObject?.type === 'i-text';
   const [view, setView] = useState(currentView);
-  const selectedDesign = useSelector((state: RootState) => 
-    state.designs.designs.find(d => d.id === state.designs.selectedDesignId)
-  );
+  const selectedDesign = useSelector((state: RootState) => {
+    const selectedId = state.designs.selectedDesignId;
+    return state.designs.designs.find(d => d.id === selectedId);
+  });
   const selectedProductType = useSelector((state: RootState) => state.designs.selectedProductType);
-  const pathColors = useSelector((state: RootState) => state.colors.pathColors);
   const decorations = useSelector((state: RootState) => state.decorations.items);
+
+  // Move the model selector to component level
+  const selectedModel = useSelector((state: RootState) => 
+    state.models.models.find(m => m.id === selectedDesign?.modelId)
+  );
 
   const handleBackClick = () => {
     if (onUpdateSelectedObject) {
@@ -131,19 +138,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       const vectorData = JSON.stringify(fabricCanvas.toJSON(['id', 'data', 'opacity']));
 
-      const savedDesign = {
-        id: Date.now().toString(),
+      const currentPathColors = Array.isArray(pathColors) ? pathColors : [];
+
+      const newDesign = {
+        id: currentSaveId || Date.now().toString(),
         saveId: currentSaveId,
         timestamp: Date.now(),
         design: selectedDesign,
-        pathColors,
+        modelPath: selectedModel?.path,
+        pathColors: currentPathColors,
         decorations: updatedDecorations,
         preview,
         vectorData,
       };
 
-      console.log('Dispatching to cart:', savedDesign);
-      dispatch(addToCart(savedDesign));
+      console.log('Dispatching to cart with design:', newDesign);
+      dispatch(addToCart(newDesign));
       navigate('/cart');
     } catch (error) {
       console.error('Error saving design:', error);

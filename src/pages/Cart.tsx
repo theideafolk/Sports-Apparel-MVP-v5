@@ -7,6 +7,7 @@ import { removeFromCart, setCurrentSaveId } from '../store/cartSlice';
 import { loadSavedDecorations, clearDecorations } from '../store/decorationsSlice';
 import { loadSavedColors, clearColors } from '../store/colorsSlice';
 import { loadSavedDesign } from '../store/designsSlice';
+import { setSelectedModel } from '../store/modelsSlice';
 
 export const Cart: React.FC = () => {
   const dispatch = useDispatch();
@@ -14,21 +15,54 @@ export const Cart: React.FC = () => {
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const [selectedJson, setSelectedJson] = React.useState<string | null>(null);
 
-  const handleEdit = (item: typeof cartItems[0]) => {
-    // Clear existing state
+  const handleEdit = async (item: typeof cartItems[0]) => {
+    try {
+      // First load the model if available
+      if (item.design?.modelId) {
+        // Use setSelectedModel
+        dispatch(setSelectedModel(item.design.modelId));
+      } else {
+        console.error('No model ID found in design:', item.design);
+      }
+
+      // Then load the design
+      await dispatch(loadSavedDesign(item.design.id));
+      
+      // Load decorations if any
+      if (item.decorations?.length > 0) {
+        console.log('Loading decorations:', item.decorations);
+        dispatch(loadSavedDecorations(item.decorations));
+      }
+      
+      // Load colors if any
+      if (item.pathColors?.length > 0) {
+        console.log('Loading colors:', item.pathColors);
+        dispatch(loadSavedColors(item.pathColors));
+      }
+      
+      // Set the current save ID
+      dispatch(setCurrentSaveId(item.saveId || item.id));
+      
+      console.log('Navigating to designer with model:', item.design.modelId);
+      navigate('/');
+    } catch (error) {
+      console.error('Error editing design:', error);
+    }
+  };
+
+  const handleBackToDesigner = () => {
+    // Clear current save ID first
+    dispatch(setCurrentSaveId(null));
+    
+    // Clear all states
     dispatch(clearDecorations());
     dispatch(clearColors());
-
-    // Load saved state
-    dispatch(loadSavedDesign(item.design.id));
-    dispatch(loadSavedDecorations(item.decorations));
-    dispatch(loadSavedColors(item.pathColors));
     
-    // Set current save ID to track that we're editing an existing design
-    dispatch(setCurrentSaveId(item.saveId || item.id));
-
-    // Navigate back to designer
-    navigate('/');
+    // Reset product type and model
+    dispatch(setSelectedModel('jersey_1'));
+    
+    // Navigate last
+    navigate('/', { replace: true });
   };
 
   return (
