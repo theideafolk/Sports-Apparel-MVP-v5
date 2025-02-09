@@ -10,6 +10,7 @@ export interface SavedDesign {
   design: Design;
   modelPath: string; // Add model path
   pathColors: PathColor[];
+  quantity: number;
   decorations: Decoration[];
   preview: string;
   vectorData: string;

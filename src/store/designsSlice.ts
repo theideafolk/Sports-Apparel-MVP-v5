@@ -6,6 +6,7 @@ export interface Design {
   path: string;
   productType: 'jersey' | 'sock';
   modelId: string;
+  price: number;
   isDefault?: boolean;
 }
 
@@ -30,6 +31,7 @@ const initialState: DesignsState = {
       path: '/dist/assets/Designs/Jersey/Soccer_Jersey/Classic.svg',
       productType: 'jersey',
       modelId: 'jersey_1',
+      price: 49.99,
       isDefault: true
     },
     { 
@@ -37,6 +39,7 @@ const initialState: DesignsState = {
       name: 'Tiger', 
       path: '/dist/assets/Designs/Jersey/Soccer_Jersey/Tiger.svg',
       modelId: 'jersey_1',
+      price: 54.99,
       productType: 'jersey'
     },
     { 
@@ -44,6 +47,7 @@ const initialState: DesignsState = {
       name: 'Bones', 
       path: '/dist/assets/Designs/Jersey/Roundneck_Jersey/Bones.svg',
       modelId: 'jersey_4',
+      price: 59.99,
       productType: 'jersey'
     },
     { 
@@ -51,6 +55,7 @@ const initialState: DesignsState = {
       name: 'Dynamic', 
       path: '/dist/assets/Designs/Jersey/Roundneck_Jersey/Dynamic.svg',
       modelId: 'jersey_4',
+      price: 59.99,
       productType: 'jersey'
     },
     { 
@@ -58,6 +63,7 @@ const initialState: DesignsState = {
       name: 'Warrior', 
       path: '/dist/assets/Designs/Jersey/Roundneck_Jersey/Warrior.svg',
       modelId: 'jersey_4',
+      price: 64.99,
       productType: 'jersey'
     },
     { 
@@ -65,6 +71,7 @@ const initialState: DesignsState = {
       name: 'Pinstripes', 
       path: '/dist/assets/Designs/Jersey/Softball_Jersey/Pinstripes.svg',
       modelId: 'jersey_3',
+      price: 54.99,
       productType: 'jersey'
     },
     { 
@@ -72,6 +79,7 @@ const initialState: DesignsState = {
       name: 'Stripes', 
       path: '/dist/assets/Designs/Jersey/Softball_Jersey/Stripes.svg',
       modelId: 'jersey_3',
+      price: 54.99,
       productType: 'jersey'
     },
     { 
@@ -79,6 +87,7 @@ const initialState: DesignsState = {
       name: 'Velocity', 
       path: '/dist/assets/Designs/Jersey/Softball_Jersey/Velocity.svg',
       modelId: 'jersey_3',
+      price: 59.99,
       productType: 'jersey'
     },
     { 
@@ -87,6 +96,7 @@ const initialState: DesignsState = {
       path: '/dist/assets/Designs/Sock/lines.svg',
       productType: 'sock',
       modelId: 'socks_1',
+      price: 19.99,
       isDefault: true
     },
   ],
