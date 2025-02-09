@@ -154,6 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         decorations: updatedDecorations,
         preview,
         vectorData,
+        quantity,
       };
 
       console.log('Dispatching to cart with design:', newDesign);

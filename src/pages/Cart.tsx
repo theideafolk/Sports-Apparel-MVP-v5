@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Trash2, Code, Edit, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { RootState } from '../store/store';
-import { removeFromCart, setCurrentSaveId } from '../store/cartSlice';
+import { removeFromCart, setCurrentSaveId, updateQuantity } from '../store/cartSlice';
 import { loadSavedDecorations, clearDecorations } from '../store/decorationsSlice';
 import { loadSavedColors, clearColors } from '../store/colorsSlice';
 import { loadSavedDesign } from '../store/designsSlice';
@@ -63,6 +63,12 @@ export const Cart: React.FC = () => {
     
     // Navigate last
     navigate('/', { replace: true });
+  };
+
+  const handleQuantityChange = (id: string, newQuantity: number) => {
+    if (newQuantity >= 1) {
+      dispatch(updateQuantity({ id, quantity: newQuantity }));
+    }
   };
 
   return (
@@ -141,7 +147,16 @@ export const Cart: React.FC = () => {
                     <div className="mt-4">
                       <h4 className="font-medium mb-2">Design Details:</h4>
                       <ul className="text-sm text-gray-600 space-y-1">
-                        <li>• Quantity: {item.quantity}</li>
+                        <li className="flex items-center space-x-2">
+                          <span>• Quantity:</span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
+                            className="w-20 px-2 py-1 border border-gray-300 rounded-md"
+                          />
+                        </li>
                         <li>• Price per item: ${item.design.price.toFixed(2)}</li>
                         <li>• Total: ${(item.quantity * item.design.price).toFixed(2)}</li>
                         <li>• {item.decorations.length} decorations added</li>
