@@ -15,6 +15,10 @@ export const Cart: React.FC = () => {
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const [selectedJson, setSelectedJson] = React.useState<string | null>(null);
 
+  const cartTotal = cartItems.reduce((total, item) => {
+    return total + (item.quantity * item.design.price);
+  }, 0);
+
   const handleEdit = async (item: typeof cartItems[0]) => {
     try {
       // First load the model if available
@@ -144,11 +148,10 @@ export const Cart: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="mt-4">
-                      <h4 className="font-medium mb-2">Design Details:</h4>
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        <li className="flex items-center space-x-2">
-                          <span>• Quantity:</span>
+                    <div className="mt-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-600">Quantity:</span>
                           <input
                             type="number"
                             min="1"
@@ -156,9 +159,14 @@ export const Cart: React.FC = () => {
                             onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value) || 1)}
                             className="w-20 px-2 py-1 border border-gray-300 rounded-md"
                           />
-                        </li>
-                        <li>• Price per item: ${item.design.price.toFixed(2)}</li>
-                        <li>• Total: ${(item.quantity * item.design.price).toFixed(2)}</li>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-gray-500">Price per item:</div>
+                          <div className="text-lg font-semibold">${item.design.price.toFixed(2)}</div>
+                        </div>
+                      </div>
+
+                      <ul className="text-sm text-gray-600 space-y-1">
                         <li>• {item.decorations.length} decorations added</li>
                         <li>• {item.pathColors.length} colors customized</li>
                       </ul>
@@ -167,6 +175,26 @@ export const Cart: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {cartItems.length > 0 && (
+          <div className="mt-8 flex flex-col items-end border-t pt-6">
+            <div className="text-right mb-4">
+              <div className="text-sm text-gray-600 mb-1">Cart Total:</div>
+              <div className="text-2xl font-bold text-primary-600">
+                ${cartTotal.toFixed(2)}
+              </div>
+            </div>
+            <button
+              className="px-6 py-3 bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all"
+              onClick={() => {
+                // Add checkout logic here
+                console.log('Proceeding to checkout');
+              }}
+            >
+              Proceed to Checkout
+            </button>
           </div>
         )}
 
