@@ -141,6 +141,9 @@ export const Cart: React.FC = () => {
                     <div className="mt-4">
                       <h4 className="font-medium mb-2">Design Details:</h4>
                       <ul className="text-sm text-gray-600 space-y-1">
+                        <li>• Quantity: {item.quantity}</li>
+                        <li>• Price per item: ${item.design.price.toFixed(2)}</li>
+                        <li>• Total: ${(item.quantity * item.design.price).toFixed(2)}</li>
                         <li>• {item.decorations.length} decorations added</li>
                         <li>• {item.pathColors.length} colors customized</li>
                       </ul>

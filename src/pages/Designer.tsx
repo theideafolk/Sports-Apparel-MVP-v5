@@ -34,6 +34,13 @@ export const Designer: React.FC = () => {
   const [isDraggingText, setIsDraggingText] = useState(false);
   const [isScreenshotting, setIsScreenshotting] = useState(false);
 
+  const selectedModel = useSelector((state: RootState) => 
+    state.models.models.find(m => m.id === state.models.selectedModelId)
+  );
+  const selectedDesign = useSelector((state: RootState) => {
+    const selectedId = state.designs.selectedDesignId;
+    return state.designs.designs.find(d => d.id === selectedId);
+  });
   const decorations = useSelector((state: RootState) => state.decorations.items);
 
   const handleCanvasUpdate = useCallback((texture: CanvasTexture) => {
@@ -145,6 +152,12 @@ export const Designer: React.FC = () => {
   return (
     <div className="flex h-[calc(100vh-64px)]">
       <div className="flex-1 relative">
+        <div className="absolute top-4 left-4 z-10">
+          <h2 className="text-lg font-medium bg-black/80 text-white px-6 py-2 rounded-full backdrop-blur-sm">
+            {selectedModel?.name || 'Loading...'} - {selectedDesign?.name || 'Loading...'}
+          </h2>
+        </div>
+
         {isPlacingText && (
           <div className="absolute inset-0 z-10 pointer-events-none">
             <div className="p-4 bg-black bg-opacity-50 text-white rounded-md inline-block">

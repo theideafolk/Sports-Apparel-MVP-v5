@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Type, Image, Palette, ArrowLeft, Shirt, ShoppingCart, Box } from 'lucide-react';
+import { Type, Image as ImageIcon, Palette, ArrowLeft, Shirt, ShoppingCart, Box, Layout, Columns as Colors, TextIcon, Image } from 'lucide-react';
 import { TextControls } from './TextControls';
 import { ImageControls } from './ImageControls';
 import { ImageUpload } from './ImageUpload';
@@ -27,6 +27,8 @@ interface SidebarProps {
   pathColors: string[];
 }
 
+type TabType = 'design' | 'color' | 'text' | 'logo';
+
 export const Sidebar: React.FC<SidebarProps> = ({ 
   onAddText, 
   onAddImage, 
@@ -49,6 +51,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [showModelSelector, setShowModelSelector] = useState(false);
   const isTextObject = selectedObject?.type === 'i-text';
   const [view, setView] = useState(currentView);
+  const [quantity, setQuantity] = useState(1);
+  const [activeTab, setActiveTab] = useState<TabType>('design');
   const selectedDesign = useSelector((state: RootState) => {
     const selectedId = state.designs.selectedDesignId;
     return state.designs.designs.find(d => d.id === selectedId);
@@ -160,11 +164,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
+  const tabs: { id: TabType; label: string; icon: React.ReactNode }[] = [
+    { id: 'design', label: 'Design', icon: <Layout className="w-5 h-5" /> },
+    { id: 'color', label: 'Color', icon: <Colors className="w-5 h-5" /> },
+    { id: 'text', label: 'Text', icon: <TextIcon className="w-5 h-5" /> },
+    { id: 'logo', label: 'Logo', icon: <Image className="w-5 h-5" /> },
+  ];
+
   return (
-    <div className="w-full md:w-64 bg-white h-full p-4 border-t md:border-t-0 md:border-l border-gray-200 flex flex-col">
+    <div className="w-full md:w-96 bg-white h-full p-4 border-t md:border-t-0 md:border-l border-gray-200 flex flex-col shadow-lg">
       <div className="flex-1">
         <div className="flex md:block items-center justify-between">
-          <h2 className="text-xl font-bold md:mb-4">
+          <h2 className="text-xl font-display font-bold md:mb-4 text-gray-900">
             {isTextObject ? (
               <button 
                 onClick={handleBackClick}
@@ -177,58 +188,88 @@ export const Sidebar: React.FC<SidebarProps> = ({
               'Design Tools'
             )}
           </h2>
-        
-          {!isTextObject && <div className="flex md:block space-x-4 md:space-x-0 md:space-y-4">
-            <button 
-              onClick={onAddText}
-              className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded"
-            >
-              <Type className="w-5 h-5" />
-              <span className="hidden md:inline">Add Text</span>
-            </button>
+          
+          {!isTextObject && (
+            <>
+              <div className="grid grid-cols-4 gap-1 mt-4 bg-gray-100 p-1 rounded-lg">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex flex-col items-center justify-center p-2 rounded-md transition-colors ${
+                      activeTab === tab.id
+                        ? 'bg-white shadow-sm text-primary-600'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {tab.icon}
+                    <span className="text-xs mt-1">{tab.label}</span>
+                  </button>
+                ))}
+              </div>
 
-            <button 
-              onClick={() => setShowImageUpload(true)}
-              className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded"
-            >
-              <Image className="w-5 h-5" />
-              <span className="hidden md:inline">Add Image</span>
-            </button>
+              <div className="mt-6">
+                {activeTab === 'design' && (
+                  <div className="space-y-4">
+                    <button 
+                      onClick={() => setShowModelSelector(true)}
+                      className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Box className="w-5 h-5 text-gray-600" />
+                        <span>Change Model</span>
+                      </div>
+                      <ArrowLeft className="w-4 h-4 rotate-180 text-gray-400" />
+                    </button>
 
-            <button 
-              onClick={() => setShowColorPalette(!showColorPalette)}
-              className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded"
-              title="Change Colors"
-            >
-              <Palette className="w-5 h-5" />
-              <span className="hidden md:inline">Change Colors</span>
-            </button>
+                    <button 
+                      onClick={() => setShowDesignSelector(true)}
+                      className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Shirt className="w-5 h-5 text-gray-600" />
+                        <span>Change Design</span>
+                      </div>
+                      <ArrowLeft className="w-4 h-4 rotate-180 text-gray-400" />
+                    </button>
+                  </div>
+                )}
 
-            <button 
-              onClick={() => setShowDesignSelector(true)}
-              className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded"
-              title="Change Design"
-            >
-              <Shirt className="w-5 h-5" />
-              <span className="hidden md:inline">Change Design</span>
-            </button>
+                {activeTab === 'color' && (
+                  <div>
+                    <ColorPalette />
+                  </div>
+                )}
 
-            <button 
-              onClick={() => setShowModelSelector(true)}
-              className="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded"
-              title="Change Model"
-            >
-              <Box className="w-5 h-5" />
-              <span className="hidden md:inline">Change Model</span>
-            </button>
-          </div>}
+                {activeTab === 'text' && (
+                  <button 
+                    onClick={onAddText}
+                    className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Type className="w-5 h-5 text-gray-600" />
+                      <span>Add Text</span>
+                    </div>
+                    <ArrowLeft className="w-4 h-4 rotate-180 text-gray-400" />
+                  </button>
+                )}
+
+                {activeTab === 'logo' && (
+                  <button 
+                    onClick={() => setShowImageUpload(true)}
+                    className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <ImageIcon className="w-5 h-5 text-gray-600" />
+                      <span>Add Image</span>
+                    </div>
+                    <ArrowLeft className="w-4 h-4 rotate-180 text-gray-400" />
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
-
-        {showColorPalette && !isTextObject && (
-          <div className="mt-6 border-t pt-6">
-            <ColorPalette />
-          </div>
-        )}
 
         {isTextObject && selectedObject && onUpdateSelectedObject && (
           <div className="mt-6 border-t pt-6">
@@ -284,17 +325,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
-      <div className="p-4 border-t mt-auto">
+      <div className="p-4 border-t mt-auto space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+              Quantity:
+            </label>
+            <input
+              type="number"
+              id="quantity"
+              min="1"
+              value={quantity}
+              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+              className="w-20 px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-500">Price per item:</div>
+            <div className="text-lg font-semibold">${selectedDesign?.price.toFixed(2)}</div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between py-2 border-t">
+          <div className="text-sm font-medium text-gray-700">Total:</div>
+          <div className="text-xl font-bold text-primary-600">
+            ${((selectedDesign?.price || 0) * quantity).toFixed(2)}
+          </div>
+        </div>
+
         <button
           onClick={handleSaveDesign}
           disabled={hasSelection}
           className={`w-full px-4 py-2 rounded-md transition-colors ${
             hasSelection 
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-              : 'bg-blue-500 hover:bg-blue-600 text-white'
+              : 'bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white font-medium shadow-md hover:shadow-lg'
           }`}
         >
-          {hasSelection ? "Deselect to Save" : "Save My Design"}
+          {hasSelection ? "Deselect to Add to Cart" : `Add to Cart (${quantity})`}
         </button>
       </div>
     </div>
