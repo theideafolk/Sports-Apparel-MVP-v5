@@ -12,6 +12,7 @@ import {
   setSelectedDecoration 
 } from '../store/decorationsSlice';
 import type { RootState } from '../store/store';
+import { debounce } from 'lodash';
 
 export const Designer: React.FC = () => {
   const dispatch = useDispatch();
@@ -149,6 +150,43 @@ export const Designer: React.FC = () => {
     return screenshot;
   }, []);
 
+  const handleTextUpdate = useCallback(
+    debounce((updates: Partial<fabric.Object>) => {
+      if (designControls && selectedObject && selectedObject.id) {
+        // Batch updates together
+        requestAnimationFrame(() => {
+          // Update fabric object
+          selectedObject.set(updates);
+          fabricCanvas?.renderAll();
+
+          // Update controls and dispatch in same frame
+          designControls.updateObject(updates);
+          dispatch(updateDecoration({
+            id: selectedObject.id,
+            properties: {
+              ...(selectedObject.type === 'i-text' ? {
+                text: updates.text || (selectedObject as fabric.IText).text,
+                fontFamily: (selectedObject as fabric.IText).fontFamily,
+                fill: (selectedObject as fabric.IText).fill as string,
+                strokeWidth: (selectedObject as fabric.IText).strokeWidth,
+                stroke: (selectedObject as fabric.IText).stroke,
+              } : {
+                src: (selectedObject as fabric.Image).getSrc(),
+              }),
+              left: selectedObject.left,
+              top: selectedObject.top,
+              scaleX: selectedObject.scaleX,
+              scaleY: selectedObject.scaleY,
+              angle: selectedObject.angle,
+              ...updates
+            }
+          }));
+        });
+      }
+    }, 16), // 16ms debounce for smooth 60fps
+    [designControls, selectedObject, fabricCanvas, dispatch]
+  );
+
   return (
     <div className="flex h-[calc(100vh-64px)]">
       <div className="flex-1 relative">
@@ -222,40 +260,7 @@ export const Designer: React.FC = () => {
             dispatch(removeDecoration(id));
           }
         }}
-        onUpdateSelectedObject={(updates) => {
-          if (designControls && selectedObject && selectedObject.id) {
-            if (updates === null) {
-              designControls.updateObject(null);
-              return;
-            }
-            
-            // Apply updates to the selected object first
-            selectedObject.set(updates);
-            fabricCanvas?.renderAll();
-
-            designControls.updateObject(updates);
-            dispatch(updateDecoration({
-              id: selectedObject.id,
-              properties: {
-                ...(selectedObject.type === 'i-text' ? {
-                  text: updates.text || (selectedObject as fabric.IText).text,
-                  fontFamily: (selectedObject as fabric.IText).fontFamily,
-                  fill: (selectedObject as fabric.IText).fill as string,
-                  strokeWidth: (selectedObject as fabric.IText).strokeWidth,
-                  stroke: (selectedObject as fabric.IText).stroke,
-                } : {
-                  src: (selectedObject as fabric.Image).getSrc(),
-                }),
-                left: selectedObject.left,
-                top: selectedObject.top,
-                scaleX: selectedObject.scaleX,
-                scaleY: selectedObject.scaleY,
-                angle: selectedObject.angle,
-                ...updates
-              }
-            }));
-          }
-        }}
+        onUpdateSelectedObject={handleTextUpdate}
         onTakeScreenshot={handleScreenshot}
         hasSelection={hasSelection}
       />
