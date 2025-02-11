@@ -153,14 +153,17 @@ export const Designer: React.FC = () => {
   const handleTextUpdate = useCallback(
     debounce((updates: Partial<fabric.Object>) => {
       if (designControls && selectedObject && selectedObject.id) {
-        // Batch updates together
+        // Update fabric object without re-rendering
+        selectedObject.set(updates);
+        
+        if (fabricCanvas) {
+          fabricCanvas.setActiveObject(selectedObject);
+        }
+
+        // Batch all updates in a single animation frame
         requestAnimationFrame(() => {
-          // Update fabric object
-          selectedObject.set(updates);
-          
-          // Ensure the object stays selected
+          // Update fabric canvas
           if (fabricCanvas) {
-            fabricCanvas.setActiveObject(selectedObject);
             fabricCanvas.renderAll();
           }
 
@@ -188,7 +191,7 @@ export const Designer: React.FC = () => {
           }));
         });
       }
-    }, 16), // 16ms debounce for smooth 60fps
+    }, 32), // Increased debounce time to reduce updates
     [designControls, selectedObject, fabricCanvas, dispatch]
   );
 

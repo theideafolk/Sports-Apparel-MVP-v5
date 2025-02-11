@@ -90,17 +90,22 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
     [updateObjectState]
   );
 
-  const updateTexture = useCallback(() => {
-    if (!fabricCanvasRef.current?.getElement()) return;
-    
-    try {
-      const texture = new CanvasTexture(fabricCanvasRef.current.getElement());
-      texture.needsUpdate = true;
-      onCanvasUpdate(texture);
-    } catch (error) {
-      console.error('Error updating texture:', error);
-    }
-  }, [onCanvasUpdate]);
+  const updateTexture = useCallback(
+    debounce(() => {
+      if (!fabricCanvasRef.current?.getElement()) return;
+      
+      try {
+        const texture = new CanvasTexture(fabricCanvasRef.current.getElement());
+        texture.needsUpdate = true;
+        requestAnimationFrame(() => {
+          onCanvasUpdate(texture);
+        });
+      } catch (error) {
+        console.error('Error updating texture:', error);
+      }
+    }, 32),
+    [onCanvasUpdate]
+  );
 
   const applyColors = useCallback((design: fabric.Group) => {
     if (!design || !design.getObjects) return;
