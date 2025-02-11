@@ -157,7 +157,12 @@ export const Designer: React.FC = () => {
         requestAnimationFrame(() => {
           // Update fabric object
           selectedObject.set(updates);
-          fabricCanvas?.renderAll();
+          
+          // Ensure the object stays selected
+          if (fabricCanvas) {
+            fabricCanvas.setActiveObject(selectedObject);
+            fabricCanvas.renderAll();
+          }
 
           // Update controls and dispatch in same frame
           designControls.updateObject(updates);
