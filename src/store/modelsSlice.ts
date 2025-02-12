@@ -20,7 +20,7 @@ const initialState: ModelsState = {
     {
       id: 'jersey_1',
       name: 'Soccer Jersey',
-      path: '/dist/assets/3DObjects/Jersey/jersey_1.obj',
+      path: 'dist/assets/3DObjects/Jersey/jersey_1.obj',
       productType: 'jersey',
       defaultDesignId: 'jersey-classic',
       isDefault: true
@@ -28,7 +28,7 @@ const initialState: ModelsState = {
     {
       id: 'jersey_3',
       name: 'Softball Jersey',
-      path: '/dist/assets/3DObjects/Jersey/Softball.obj',
+      path: 'dist/assets/3DObjects/Jersey/Softball.obj',
       defaultDesignId: 'jersey-pinstripes',
       productType: 'jersey'
     },
@@ -36,13 +36,13 @@ const initialState: ModelsState = {
       id: 'jersey_4',
       name: 'Round Neck Jersey',
       defaultDesignId: 'jersey-warrior',
-      path: '/dist/assets/3DObjects/Jersey/RoundNeck.obj',
+      path: 'dist/assets/3DObjects/Jersey/RoundNeck.obj',
       productType: 'jersey'
     },
     {
       id: 'socks_1',
       name: 'Short Socks',
-      path: '/dist/assets/3DObjects/Socks/socks_1.obj',
+      path: 'dist/assets/3DObjects/Socks/socks_1.obj',
       defaultDesignId: 'sock-lines',
       productType: 'sock',
       isDefault: true
@@ -51,7 +51,7 @@ const initialState: ModelsState = {
     {
       id: 'socks_2',
       name: 'Long Socks',
-      path: '/dist/assets/3DObjects/Socks/socks_2.obj',
+      path: 'dist/assets/3DObjects/Socks/socks_2.obj',
       defaultDesignId: 'sock-stripes',
       productType: 'sock'
     }
