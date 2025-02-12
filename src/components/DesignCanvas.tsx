@@ -52,6 +52,10 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const pathColors = useSelector((state: RootState) => state.colors.pathColors);
   const decorations = useSelector((state: RootState) => state.decorations.items);
 
+  // Add state to track text positions
+  const storedPositionsRef = useRef<Map<string, any>>(new Map());
+  const isEditingRef = useRef<boolean>(false);
+
   const updateObjectState = useCallback((obj: fabric.Object) => {
     if (!obj || !obj.id) return;
 
@@ -521,9 +525,13 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
         });
       };
 
-      canvas.on('selection:created', () => {
+      canvas.on('selection:created', (e) => {
+        isEditingRef.current = true;
         selectionChangeCallbackRef.current?.(true);
         controlsRef.current.onObjectSelected?.(canvas.getActiveObject());
+        
+        // Log start of editing
+        console.log('Started editing text:', e.target?.id);
         handleRender();
       });
 
@@ -533,7 +541,37 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
         handleRender();
       });
 
-      canvas.on('selection:cleared', () => {
+      canvas.on('selection:cleared', (e) => {
+        if (isEditingRef.current && e.deselected?.[0]) {
+          const deselectedObject = e.deselected[0];
+          
+          // Store final position when deselecting
+          if (deselectedObject.type === 'i-text' && deselectedObject.id) {
+            const finalPosition = {
+              left: deselectedObject.left,
+              top: deselectedObject.top,
+              scaleX: deselectedObject.scaleX,
+              scaleY: deselectedObject.scaleY,
+              angle: deselectedObject.angle
+            };
+            
+            console.log('Storing final position for:', deselectedObject.id, finalPosition);
+            storedPositionsRef.current.set(deselectedObject.id, finalPosition);
+            
+            // Update state
+            dispatch(updateDecoration({
+              id: deselectedObject.id,
+              properties: {
+                ...finalPosition,
+                text: (deselectedObject as fabric.IText).text,
+                fontFamily: (deselectedObject as fabric.IText).fontFamily,
+                fill: (deselectedObject as fabric.IText).fill as string
+              }
+            }));
+          }
+        }
+        
+        isEditingRef.current = false;
         selectionChangeCallbackRef.current?.(false);
         controlsRef.current.onObjectSelected?.(null);
         handleRender();
@@ -632,10 +670,20 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
       const canvas = fabricCanvasRef.current;
 
       const handleModification = (e: any) => {
-        if (e.target) {
+        if (e.target && e.target.type === 'i-text') {
+          // Only update position in store when not in editing mode
+          if (!isEditingRef.current) {
+            const storedPosition = storedPositionsRef.current.get(e.target.id);
+            if (storedPosition) {
+              e.target.set(storedPosition);
+              fabricCanvasRef.current?.renderAll();
+              updateTexture();
+            }
+          }
+          
           requestAnimationFrame(() => {
             updateObjectState(e.target);
-            canvas.renderAll();
+            fabricCanvasRef.current?.renderAll();
             updateTexture();
           });
         }
