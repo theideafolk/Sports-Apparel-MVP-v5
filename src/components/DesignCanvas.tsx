@@ -761,32 +761,6 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
   }, [vectorData, isCanvasReady, isDesignLoaded, loadVectorData]);
 
 
-  const getVectorData = useCallback(() => {
-    if (!fabricCanvasRef.current || !isDesignLoaded) return null;
-
-    const canvas = fabricCanvasRef.current;
-    const backgroundGroup = canvas.getObjects().find(obj => obj.data?.isBackground);
-    
-    // Get all paths from the background group
-    let pathColors: string[] = [];
-    
-    if (backgroundGroup && 'objects' in backgroundGroup) {
-      // Type assertion to access objects array
-      const group = backgroundGroup as fabric.Group;
-      pathColors = group.getObjects()
-        .filter(obj => obj.type === 'path' && obj.fill && typeof obj.fill === 'string')
-        .map(obj => obj.fill as string);
-    }
-
-    console.log('Found paths:', pathColors.length);
-    console.log('Path colors:', pathColors);
-
-    return JSON.stringify({
-      ...canvas.toJSON(['id']),
-      pathColors
-    });
-  }, [isDesignLoaded]);
-
   return (
     <div className="w-full h-full flex items-center justify-center p-4">
       <canvas ref={canvasRef} className="max-w-full max-h-full" />
