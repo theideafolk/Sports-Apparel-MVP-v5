@@ -56,9 +56,6 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const storedPositionsRef = useRef<Map<string, any>>(new Map());
   const isEditingRef = useRef<boolean>(false);
 
-  // Add this to track current colors
-  const [currentColors, setCurrentColors] = useState<string[]>([]);
-
   const updateObjectState = useCallback((obj: fabric.Object) => {
     if (!obj || !obj.id) return;
 
@@ -763,36 +760,6 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
     }
   }, [vectorData, isCanvasReady, isDesignLoaded, loadVectorData]);
 
-  // Update the handleColorChange function
-  const handleColorChange = (color: string, pathId: string) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Find the path element and update its color
-    const path = canvas.getObjects().find(obj => obj.id === pathId);
-    if (path) {
-      path.set('fill', color);
-      canvas.renderAll();
-
-      // Update currentColors array
-      setCurrentColors(prevColors => {
-        const newColors = [...prevColors];
-        const pathIndex = parseInt(pathId.replace('path_', ''));
-        newColors[pathIndex] = color;
-        return newColors;
-      });
-    }
-  };
-
-  // Modify the addToCart function to include colors
-  const addToCart = () => {
-    const cartItem = {
-      // ... other cart item properties
-      pathColors: currentColors.filter(Boolean), // Only include non-empty colors
-    };
-    
-    // Add to cart logic
-  };
 
   const getVectorData = useCallback(() => {
     if (!fabricCanvasRef.current || !isDesignLoaded) return null;
