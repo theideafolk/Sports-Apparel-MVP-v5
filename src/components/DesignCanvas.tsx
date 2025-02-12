@@ -99,15 +99,16 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
       if (!fabricCanvasRef.current?.getElement()) return;
       
       try {
-        const texture = new CanvasTexture(fabricCanvasRef.current.getElement());
-        texture.needsUpdate = true;
-        requestAnimationFrame(() => {
+        // Batch texture updates in requestAnimationFrame
+        window.requestAnimationFrame(() => {
+          const texture = new CanvasTexture(fabricCanvasRef.current.getElement());
+          texture.needsUpdate = true;
           onCanvasUpdate(texture);
         });
       } catch (error) {
         console.error('Error updating texture:', error);
       }
-    }, 32),
+    }, 100), // Increase debounce time
     [onCanvasUpdate]
   );
 
