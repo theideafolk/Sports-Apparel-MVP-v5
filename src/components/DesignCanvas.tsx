@@ -56,6 +56,9 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const storedPositionsRef = useRef<Map<string, any>>(new Map());
   const isEditingRef = useRef<boolean>(false);
 
+  // Add this to track current colors
+  const [currentColors, setCurrentColors] = useState<string[]>([]);
+
   const updateObjectState = useCallback((obj: fabric.Object) => {
     if (!obj || !obj.id) return;
 
@@ -759,6 +762,63 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
       loadVectorData(vectorData);
     }
   }, [vectorData, isCanvasReady, isDesignLoaded, loadVectorData]);
+
+  // Update the handleColorChange function
+  const handleColorChange = (color: string, pathId: string) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Find the path element and update its color
+    const path = canvas.getObjects().find(obj => obj.id === pathId);
+    if (path) {
+      path.set('fill', color);
+      canvas.renderAll();
+
+      // Update currentColors array
+      setCurrentColors(prevColors => {
+        const newColors = [...prevColors];
+        const pathIndex = parseInt(pathId.replace('path_', ''));
+        newColors[pathIndex] = color;
+        return newColors;
+      });
+    }
+  };
+
+  // Modify the addToCart function to include colors
+  const addToCart = () => {
+    const cartItem = {
+      // ... other cart item properties
+      pathColors: currentColors.filter(Boolean), // Only include non-empty colors
+    };
+    
+    // Add to cart logic
+  };
+
+  const getVectorData = useCallback(() => {
+    if (!fabricCanvasRef.current || !isDesignLoaded) return null;
+
+    const canvas = fabricCanvasRef.current;
+    const backgroundGroup = canvas.getObjects().find(obj => obj.data?.isBackground);
+    
+    // Get all paths from the background group
+    let pathColors: string[] = [];
+    
+    if (backgroundGroup && 'objects' in backgroundGroup) {
+      // Type assertion to access objects array
+      const group = backgroundGroup as fabric.Group;
+      pathColors = group.getObjects()
+        .filter(obj => obj.type === 'path' && obj.fill && typeof obj.fill === 'string')
+        .map(obj => obj.fill as string);
+    }
+
+    console.log('Found paths:', pathColors.length);
+    console.log('Path colors:', pathColors);
+
+    return JSON.stringify({
+      ...canvas.toJSON(['id']),
+      pathColors
+    });
+  }, [isDesignLoaded]);
 
   return (
     <div className="w-full h-full flex items-center justify-center p-4">
