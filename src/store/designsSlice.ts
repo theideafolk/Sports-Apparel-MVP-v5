@@ -28,7 +28,7 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-classic',
       name: 'Classic',
-      path: 'dist/assets/designs/jersey/soccer_jersey/classic.svg',
+      path: 'assets/designs/jersey/soccer_jersey/classic.svg',
       productType: 'jersey',
       modelId: 'jersey_1',
       price: 49.99,
@@ -37,7 +37,7 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-tiger', 
       name: 'Tiger', 
-      path: 'dist/assets/designs/jersey/soccer_jersey/tiger.svg',
+      path: 'assets/designs/jersey/soccer_jersey/tiger.svg',
       modelId: 'jersey_1',
       price: 54.99,
       productType: 'jersey'
@@ -45,7 +45,7 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-bones', 
       name: 'Bones', 
-      path: 'dist/assets/designs/jersey/roundneck_jersey/bones.svg',
+      path: 'assets/designs/jersey/roundneck_jersey/bones.svg',
       modelId: 'jersey_4',
       price: 59.99,
       productType: 'jersey'
@@ -53,7 +53,7 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-dynamic', 
       name: 'Dynamic', 
-      path: 'dist/assets/designs/jersey/roundneck_jersey/dynamic.svg',
+      path: 'assets/designs/jersey/roundneck_jersey/dynamic.svg',
       modelId: 'jersey_4',
       price: 59.99,
       productType: 'jersey'
@@ -61,7 +61,7 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-warrior', 
       name: 'Warrior', 
-      path: 'dist/assets/designs/jersey/roundneck_jersey/warrior.svg',
+      path: 'assets/designs/jersey/roundneck_jersey/warrior.svg',
       modelId: 'jersey_4',
       price: 64.99,
       productType: 'jersey'
@@ -69,7 +69,7 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-pinstripes', 
       name: 'Pinstripes', 
-      path: 'dist/assets/designs/jersey/softball_jersey/pinstripes.svg',
+      path: 'assets/designs/jersey/softball_jersey/pinstripes.svg',
       modelId: 'jersey_3',
       price: 54.99,
       productType: 'jersey'
@@ -77,7 +77,7 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-stripes', 
       name: 'Stripes', 
-      path: 'dist/assets/designs/jersey/softball_jersey/stripes.svg',
+      path: 'assets/designs/jersey/softball_jersey/stripes.svg',
       modelId: 'jersey_3',
       price: 54.99,
       productType: 'jersey'
@@ -85,7 +85,7 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-velocity', 
       name: 'Velocity', 
-      path: 'dist/assets/designs/jersey/softball_jersey/velocity.svg',
+      path: 'assets/designs/jersey/softball_jersey/velocity.svg',
       modelId: 'jersey_3',
       price: 59.99,
       productType: 'jersey'
@@ -93,7 +93,7 @@ const initialState: DesignsState = {
     { 
       id: 'sock-lines', 
       name: 'Lines', 
-      path: 'dist/assets/designs/sock/lines.svg',
+      path: 'assets/designs/sock/lines.svg',
       productType: 'sock',
       modelId: 'socks_1',
       price: 19.99,
