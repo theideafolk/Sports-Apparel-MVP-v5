@@ -557,8 +557,8 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
         if (isEditingRef.current && e.deselected?.[0]) {
           const deselectedObject = e.deselected[0];
           
-          // Store final position when deselecting
-          if (deselectedObject.type === 'i-text' && deselectedObject.id) {
+          // Store final position for both text and image objects
+          if ((deselectedObject.type === 'i-text' || deselectedObject.type === 'image') && deselectedObject.id) {
             const finalPosition = {
               left: deselectedObject.left,
               top: deselectedObject.top,
@@ -570,15 +570,26 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
             console.log('Storing final position for:', deselectedObject.id, finalPosition);
             storedPositionsRef.current.set(deselectedObject.id, finalPosition);
             
-            // Update state
-            dispatch(updateDecoration({
-              id: deselectedObject.id,
-              properties: {
+            // Create properties object based on object type
+            let properties;
+            if (deselectedObject.type === 'i-text') {
+              properties = {
                 ...finalPosition,
                 text: (deselectedObject as fabric.IText).text,
                 fontFamily: (deselectedObject as fabric.IText).fontFamily,
                 fill: (deselectedObject as fabric.IText).fill as string
-              }
+              };
+            } else {
+              properties = {
+                ...finalPosition,
+                src: (deselectedObject as fabric.Image).getSrc()
+              };
+            }
+
+            // Update state with the correct properties
+            dispatch(updateDecoration({
+              id: deselectedObject.id,
+              properties
             }));
           }
         }
@@ -682,7 +693,10 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
       const canvas = fabricCanvasRef.current;
 
       const handleModification = (e: any) => {
-        if (e.target && e.target.type === 'i-text') {
+        if (!e.target) return;
+        
+        // Handle both text and image modifications
+        if (e.target.type === 'i-text' || e.target.type === 'image') {
           // Only update position in store when not in editing mode
           if (!isEditingRef.current) {
             const storedPosition = storedPositionsRef.current.get(e.target.id);
