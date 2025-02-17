@@ -137,14 +137,24 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
       canvas.clear();
 
       fabric.loadSVGFromURL(path, (objects, options) => {
-        if (objects && objects.length > 0 && pathColors.length === 0) {
-          const colors = objects.map((obj, index) => ({
-            id: `path-${index}`,
-            name: `Path ${index + 1}`,
-            fill: (obj as fabric.Path).fill as string || '#000000'
-          }));
-          dispatch(setPathColors(colors));
-        }
+        if (objects && objects.length > 0) {
+          // Filter for both path and rect elements that have fill colors
+          const colorableObjects = objects.filter(obj => 
+            (obj.type === 'path' || obj.type === 'rect') && 
+            obj.fill && 
+            typeof obj.fill === 'string'
+          );
+          
+          // Check if we need to initialize colors
+          if (pathColors.length === 0 || colorableObjects.length !== pathColors.length) {
+            const colors = colorableObjects.map((obj, index) => ({
+              id: `path-${index}`,
+              name: `Path ${index + 1}`,
+              fill: obj.fill as string || '#000000'
+            }));
+            dispatch(setPathColors(colors));
+          }
+        }  
 
         if (!objects || objects.length === 0) {
           console.error('No SVG objects loaded');
