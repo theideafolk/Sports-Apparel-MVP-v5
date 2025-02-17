@@ -34,6 +34,8 @@ export const Designer: React.FC = () => {
   const [isPlacingText, setIsPlacingText] = useState(false);
   const [isDraggingText, setIsDraggingText] = useState(false);
   const [isScreenshotting, setIsScreenshotting] = useState(false);
+  const [isPlacingImage, setIsPlacingImage] = useState(false);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
 
   const selectedModel = useSelector((state: RootState) => 
     state.models.models.find(m => m.id === state.models.selectedModelId)
@@ -45,6 +47,7 @@ export const Designer: React.FC = () => {
   const decorations = useSelector((state: RootState) => state.decorations.items);
 
   const handleCanvasUpdate = useCallback((texture: CanvasTexture) => {
+    console.log('Received texture update in Designer');
     setCanvasTexture(texture);
   }, []);
 
@@ -130,12 +133,16 @@ export const Designer: React.FC = () => {
 
   const handleInteract = useCallback((uv: { x: number, y: number }) => {
     if (isPlacingText && designControls) {
-      designControls.addText(uv); // We'll modify this function to accept position
+      designControls.addText(uv);
       setIsPlacingText(false);
-    } else if (designControls && !isPlacingText) {
+    } else if (isPlacingImage && pendingImageFile && designControls) {
+      designControls.addImage(pendingImageFile, uv);
+      setIsPlacingImage(false);
+      setPendingImageFile(null);
+    } else if (designControls && !isPlacingText && !isPlacingImage) {
       designControls.handleInteraction(uv);
     }
-  }, [designControls, isPlacingText]);
+  }, [isPlacingText, isPlacingImage, pendingImageFile, designControls]);
 
   useEffect(() => {
     console.log('Controls disabled:', isPlacingText || isDraggingText);
@@ -195,9 +202,15 @@ export const Designer: React.FC = () => {
     [designControls, selectedObject, fabricCanvas, dispatch]
   );
 
+  const handleImageSelect = (file: File) => {
+    setPendingImageFile(file);
+    setIsPlacingImage(true);
+    setView('3D'); // Force 3D view when adding image
+  };
+
   return (
-    <div className="flex h-[calc(100vh-64px)]">
-      <div className="flex-1 relative">
+    <div className="flex h-screen">
+      <div className="relative flex-1">
         <div className="absolute top-4 left-4 z-10">
           <h2 className="text-lg font-medium bg-black/80 text-white px-6 py-2 rounded-full backdrop-blur-sm">
             {selectedModel?.name || 'Loading...'} - {selectedDesign?.name || 'Loading...'}
@@ -239,10 +252,20 @@ export const Designer: React.FC = () => {
             <Box3d className="w-5 h-5 text-gray-700" />
           )}
         </button>
+
+        {isPlacingImage && (
+          <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            Click anywhere on the jersey to place your image
+          </div>
+        )}
       </div>
       <Sidebar 
         onAddText={handleAddText}
-        onAddImage={(file) => designControls?.addImage(file)}
+        onAddImage={(file) => {
+          setPendingImageFile(file);
+          setIsPlacingImage(true);
+          setView('3D');
+        }}
         currentView={view}
         selectedObject={selectedObject}
         fabricCanvas={fabricCanvas}
@@ -271,6 +294,7 @@ export const Designer: React.FC = () => {
         onUpdateSelectedObject={handleTextUpdate}
         onTakeScreenshot={handleScreenshot}
         hasSelection={hasSelection}
+        isPlacingImage={isPlacingImage}
       />
     </div>
   );

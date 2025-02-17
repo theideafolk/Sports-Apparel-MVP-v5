@@ -25,6 +25,7 @@ interface SidebarProps {
   onTakeScreenshot: () => Promise<string | undefined>;
   hasSelection: boolean;
   pathColors: string[];
+  isPlacingImage: boolean;
 }
 
 type TabType = 'design' | 'color' | 'text' | 'logo';
@@ -40,7 +41,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   fabricCanvas,
   onTakeScreenshot,
   hasSelection,
-  pathColors
+  pathColors,
+  isPlacingImage,
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();

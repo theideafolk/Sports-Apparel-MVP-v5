@@ -291,7 +291,7 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
     }
   }, [updateTexture]);
 
-  const addImage = useCallback((file: File) => {
+  const addImage = useCallback((file: File, position?: { x: number, y: number }) => {
     if (fabricCanvasRef.current) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -299,8 +299,8 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
         img.onload = () => {
           if (fabricCanvasRef.current) {
             const fabricImage = new fabric.Image(img, {
-              left: 100,
-              top: 100,
+              left: position ? position.x * fabricCanvasRef.current.width! : 100,
+              top: position ? position.y * fabricCanvasRef.current.height! : 100,
               lockSkewingX: true,
               lockSkewingY: true,
               centeredScaling: true,
@@ -313,7 +313,8 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
               borderColor: '#1976D2',
               borderScaleFactor: 2
             });
-            fabricImage.scaleToWidth(200);
+            // Set smaller default size
+            fabricImage.scaleToWidth(50);
             fabricCanvasRef.current.add(fabricImage);
             fabricCanvasRef.current.setActiveObject(fabricImage);
             controlsRef.current.onObjectAdded?.(fabricImage);
