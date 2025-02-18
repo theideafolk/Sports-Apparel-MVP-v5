@@ -22,36 +22,39 @@ export const Cart: React.FC = () => {
 
   const handleEdit = async (item: typeof cartItems[0]) => {
     try {
-      console.log('8. Loading saved design with pathColors:', item.pathColors);
+      console.log('1. Starting edit flow for item:', item.id);
       
-      if (item.pathColors?.length > 0) {
-        console.log('9. Loading colors:', item.pathColors);
-        dispatch(loadSavedColors(item.pathColors));
-      } else {
-        console.warn('No pathColors found in saved design');
-      }
+      // Clear all existing states first
+      dispatch(clearDecorations());
+      dispatch(clearColors());
+      console.log('2. Cleared existing decorations and colors');
 
       // First load the model if available
       if (item.design?.modelId) {
-        // Use setSelectedModel
         dispatch(setSelectedModel(item.design.modelId));
-      } else {
-        console.error('No model ID found in design:', item.design);
+        console.log('3. Set model:', item.design.modelId);
       }
 
       // Then load the design
       await dispatch(loadSavedDesign(item.design.id));
+      console.log('4. Loaded design:', item.design.id);
       
-      // Load decorations if any
+      // Load colors if any
+      if (item.pathColors?.length > 0) {
+        console.log('5. Loading colors:', item.pathColors);
+        dispatch(loadSavedColors(item.pathColors));
+      }
+      
+      // Load decorations last if any
       if (item.decorations?.length > 0) {
-        console.log('Loading decorations:', item.decorations);
+        console.log('6. Loading decorations:', item.decorations);
         dispatch(loadSavedDecorations(item.decorations));
       }
       
       // Set the current save ID
       dispatch(setCurrentSaveId(item.saveId || item.id));
+      console.log('7. Set save ID:', item.saveId || item.id);
       
-      console.log('Navigating to designer with model:', item.design.modelId);
       navigate('/');
     } catch (error) {
       console.error('Error editing design:', error);
