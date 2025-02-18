@@ -4,13 +4,14 @@ import { Canvas3D } from '../components/Canvas3D';
 import { DesignCanvas } from '../components/DesignCanvas';
 import { Sidebar } from '../components/Sidebar';
 import { CanvasTexture } from 'three';
-import { Box as Box3d, Pencil } from 'lucide-react';
+import { Box as Box3d, Pencil, ChevronDown } from 'lucide-react';
 import { 
   addDecoration, 
   updateDecoration, 
   removeDecoration, 
   setSelectedDecoration 
 } from '../store/decorationsSlice';
+import { selectModel } from '../store/modelsSlice';
 import type { RootState } from '../store/store';
 import { debounce } from 'lodash';
 
@@ -40,6 +41,8 @@ export const Designer: React.FC = () => {
   const selectedModel = useSelector((state: RootState) => 
     state.models.models.find(m => m.id === state.models.selectedModelId)
   );
+  const models = useSelector((state: RootState) => state.models.models);
+  const selectedProductType = useSelector((state: RootState) => state.designs.selectedProductType);
   const selectedDesign = useSelector((state: RootState) => {
     const selectedId = state.designs.selectedDesignId;
     return state.designs.designs.find(d => d.id === selectedId);
@@ -247,16 +250,25 @@ export const Designer: React.FC = () => {
     <div className="flex h-screen">
       <div className="relative flex-1">
         <div className="absolute top-4 left-4 z-10">
-          <h2 className="text-lg font-medium bg-black/80 text-white px-6 py-2 rounded-full backdrop-blur-sm">
-            {selectedModel?.name || 'Loading...'} - {selectedDesign?.name || 'Loading...'}
-          </h2>
+          <div className="relative">
+            <select
+              value={selectedModel?.id || ''}
+              onChange={(e) => dispatch(selectModel(e.target.value))}
+              className="appearance-none text-lg font-medium bg-black text-white pl-6 pr-12 py-2 rounded-lg backdrop-blur-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/20 border border-gray-700 hover:bg-gray-900 transition-colors"
+            >
+              {models.filter(m => m.productType === selectedProductType).map((model) => (
+                <option key={model.id} value={model.id} className="bg-gray-900">
+                  {model.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white pointer-events-none" />
+          </div>
         </div>
 
         {isPlacingText && (
-          <div className="absolute inset-0 z-10 pointer-events-none">
-            <div className="p-4 bg-black bg-opacity-50 text-white rounded-md inline-block">
-              Click on the model to place text
-            </div>
+          <div className="absolute top-8 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            Click anywhere on the jersey to place your text
           </div>
         )}
         <div className={`absolute inset-0 transition-opacity duration-300 
