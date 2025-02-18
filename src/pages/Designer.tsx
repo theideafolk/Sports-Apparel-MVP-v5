@@ -213,6 +213,7 @@ export const Designer: React.FC = () => {
     if (designControls) {
       const decoration = decorations.find(d => d.id === id);
       if (decoration) {
+        // Update object and handle interaction
         designControls.updateObject(decoration.properties);
         designControls.handleInteraction({
           x: decoration.properties.left / 500,
@@ -221,7 +222,17 @@ export const Designer: React.FC = () => {
           clientX: 0,
           clientY: 0
         });
+        
+        // Set selected decoration in Redux
         dispatch(setSelectedDecoration(id));
+        
+        // Set selected object for text properties
+        if (decoration.type === 'text') {
+          const textObject = fabricCanvas?.getObjects().find(obj => obj.id === id);
+          if (textObject) {
+            setSelectedObject(textObject);
+          }
+        }
       }
     }
   };
