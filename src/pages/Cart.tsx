@@ -6,8 +6,9 @@ import type { RootState } from '../store/store';
 import { removeFromCart, setCurrentSaveId, updateQuantity } from '../store/cartSlice';
 import { loadSavedDecorations, clearDecorations } from '../store/decorationsSlice';
 import { loadSavedColors, clearColors } from '../store/colorsSlice';
-import { loadSavedDesign } from '../store/designsSlice';
-import { setSelectedModel } from '../store/modelsSlice';
+import { loadSavedDesign, clearDesignSelection } from '../store/designsSlice';
+import { setSelectedModel, setDefaultModelForType } from '../store/modelsSlice';
+import { setSelectedProductType } from '../store/designsSlice';
 
 export const Cart: React.FC = () => {
   const dispatch = useDispatch();
@@ -55,17 +56,27 @@ export const Cart: React.FC = () => {
   };
 
   const handleBackToDesigner = () => {
+    console.log('1. Starting Back to Designer flow');
+    
     // Clear current save ID first
     dispatch(setCurrentSaveId(null));
+    console.log('2. Cleared current save ID');
     
-    // Clear all states
+    // Clear all decorations and colors
     dispatch(clearDecorations());
     dispatch(clearColors());
+    console.log('3. Cleared decorations and colors');
     
-    // Reset product type and model
-    dispatch(setSelectedModel('jersey_1'));
+    // Set default product type and model
+    dispatch(setSelectedProductType('jersey'));
+    console.log('4. Set default product type to jersey');
+    
+    // This will set the default model for jersey type
+    dispatch(setDefaultModelForType('jersey'));
+    console.log('5. Set default model for jersey');
     
     // Navigate last
+    console.log('6. Navigating to designer page');
     navigate('/', { replace: true });
   };
 
@@ -79,13 +90,13 @@ export const Cart: React.FC = () => {
     <div className="min-h-[calc(100vh-64px)] bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
-          <Link
-            to="/"
+          <button
+            onClick={handleBackToDesigner}
             className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>Back to Designer</span>
-          </Link>
+          </button>
           <h1 className="text-2xl font-bold">Shopping Cart</h1>
         </div>
 
