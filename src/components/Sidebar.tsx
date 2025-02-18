@@ -180,199 +180,168 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <div className="w-full md:w-96 bg-white h-full p-4 border-t md:border-t-0 md:border-l border-gray-200 flex flex-col shadow-lg">
-      <div className="flex-1">
-        <div className="flex md:block items-center justify-between">
-          <h2 className="text-xl font-display font-bold md:mb-4 text-gray-900">
-            {isTextObject ? (
-              <button 
-                onClick={handleBackClick}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back to Tools</span>
-              </button>
-            ) : (
-              'Design Tools'
+    <div className="w-full md:w-96 bg-white h-full border-t md:border-t-0 md:border-l border-gray-200 flex flex-col shadow-lg">
+      <div className="flex-1 overflow-y-auto">
+        {/* Fixed Header */}
+        <div className="p-4 border-b">
+          <div className="flex md:block items-center justify-between">
+            <h2 className="text-xl font-display font-bold md:mb-4 text-gray-900">
+              {isTextObject ? (
+                <button 
+                  onClick={handleBackClick}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  <span>Back to Tools</span>
+                </button>
+              ) : (
+                'Design Tools'
+              )}
+            </h2>
+            
+            {!isTextObject && (
+              <>
+                <div className="grid grid-cols-4 gap-1 mt-4 bg-gray-100 p-1 rounded-lg">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex flex-col items-center justify-center p-2 rounded-md transition-colors ${
+                        activeTab === tab.id
+                          ? 'bg-white shadow-sm text-primary-600'
+                          : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {tab.icon}
+                      <span className="text-xs mt-1">{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-6">
+                  {activeTab === 'design' && (
+                    <div className="space-y-4">
+                      <div className="p-4 bg-white rounded-lg border border-gray-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold text-gray-900">Select Design</h3>
+                          <div className="text-sm text-gray-500">
+                            ${selectedDesign?.price.toFixed(2)}
+                          </div>
+                        </div>
+                        <DesignSelector productType={selectedProductType} />
+                      </div>
+                    </div>
+                  )}
+
+                  {activeTab === 'color' && (
+                    <div>
+                      <ColorPalette />
+                    </div>
+                  )}
+
+                  {activeTab === 'text' && (
+                    <button 
+                      onClick={onAddText}
+                      className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Type className="w-5 h-5 text-gray-600" />
+                        <span>Add Text</span>
+                      </div>
+                      <ArrowLeft className="w-4 h-4 rotate-180 text-gray-400" />
+                    </button>
+                  )}
+
+                  {activeTab === 'logo' && (
+                    <button 
+                      onClick={() => setShowImageUpload(true)}
+                      className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <ImageIcon className="w-5 h-5 text-gray-600" />
+                        <span>Add Image</span>
+                      </div>
+                      <ArrowLeft className="w-4 h-4 rotate-180 text-gray-400" />
+                    </button>
+                  )}
+                </div>
+              </>
             )}
-          </h2>
-          
-          {!isTextObject && (
-            <>
-              <div className="grid grid-cols-4 gap-1 mt-4 bg-gray-100 p-1 rounded-lg">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex flex-col items-center justify-center p-2 rounded-md transition-colors ${
-                      activeTab === tab.id
-                        ? 'bg-white shadow-sm text-primary-600'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    {tab.icon}
-                    <span className="text-xs mt-1">{tab.label}</span>
-                  </button>
-                ))}
-              </div>
+          </div>
+        </div>
 
-              <div className="mt-6">
-                {activeTab === 'design' && (
-                  <div className="space-y-4">
-                    <button 
-                      onClick={() => setShowModelSelector(true)}
-                      className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Box className="w-5 h-5 text-gray-600" />
-                        <span>Change Model</span>
-                      </div>
-                      <ArrowLeft className="w-4 h-4 rotate-180 text-gray-400" />
-                    </button>
-
-                    <button 
-                      onClick={() => setShowDesignSelector(true)}
-                      className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <Shirt className="w-5 h-5 text-gray-600" />
-                        <span>Change Design</span>
-                      </div>
-                      <ArrowLeft className="w-4 h-4 rotate-180 text-gray-400" />
-                    </button>
-                  </div>
-                )}
-
-                {activeTab === 'color' && (
-                  <div>
-                    <ColorPalette />
-                  </div>
-                )}
-
-                {activeTab === 'text' && (
-                  <button 
-                    onClick={onAddText}
-                    className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <Type className="w-5 h-5 text-gray-600" />
-                      <span>Add Text</span>
-                    </div>
-                    <ArrowLeft className="w-4 h-4 rotate-180 text-gray-400" />
-                  </button>
-                )}
-
-                {activeTab === 'logo' && (
-                  <button 
-                    onClick={() => setShowImageUpload(true)}
-                    className="w-full flex items-center justify-between px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <ImageIcon className="w-5 h-5 text-gray-600" />
-                      <span>Add Image</span>
-                    </div>
-                    <ArrowLeft className="w-4 h-4 rotate-180 text-gray-400" />
-                  </button>
-                )}
-              </div>
-            </>
+        <div className="p-4">
+          {isTextObject && selectedObject && onUpdateSelectedObject && (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-4">Text Properties</h3>
+              <TextControls
+                currentText={(selectedObject as fabric.IText).text || ''}
+                currentFont={(selectedObject as fabric.IText).fontFamily || 'Arial'}
+                currentColor={(selectedObject as fabric.IText).fill as string || '#000000'}
+                currentOutlineWidth={(selectedObject as fabric.IText).strokeWidth || 0}
+                currentOutlineColor={(selectedObject as fabric.IText).stroke || '#000000'}
+                onTextChange={(text) => onUpdateSelectedObject({ text })}
+                onFontChange={(fontFamily) => onUpdateSelectedObject({ fontFamily })}
+                onColorChange={(fill) => onUpdateSelectedObject({ fill })}
+                onOutlineChange={(width, color) => 
+                  onUpdateSelectedObject({ 
+                    strokeWidth: width,
+                    stroke: color
+                  })
+                }
+              />
+            </div>
           )}
-        </div>
 
-        {isTextObject && selectedObject && onUpdateSelectedObject && (
-          <div className="mt-6 border-t pt-6">
-            <h3 className="text-lg font-semibold mb-4">Text Properties</h3>
-            <TextControls
-              currentText={(selectedObject as fabric.IText).text || ''}
-              currentFont={(selectedObject as fabric.IText).fontFamily || 'Arial'}
-              currentColor={(selectedObject as fabric.IText).fill as string || '#000000'}
-              currentOutlineWidth={(selectedObject as fabric.IText).strokeWidth || 0}
-              currentOutlineColor={(selectedObject as fabric.IText).stroke || '#000000'}
-              onTextChange={(text) => onUpdateSelectedObject({ text })}
-              onFontChange={(fontFamily) => onUpdateSelectedObject({ fontFamily })}
-              onColorChange={(fill) => onUpdateSelectedObject({ fill })}
-              onOutlineChange={(width, color) => 
-                onUpdateSelectedObject({ 
-                  strokeWidth: width,
-                  stroke: color
-                })
-              }
+          {!isTextObject && <div className="hidden md:block mt-8">
+            <h3 className="text-lg font-semibold mb-4">Decorations</h3>
+            <DecorationsList
+              decorations={decorationsList}
+              onSelect={onSelectDecoration}
+              onDelete={onDeleteDecoration}
+              selectedId={selectedObject?.id}
             />
+          </div>}
+
+          {/* Add to Cart Button */}
+          <div className="mt-8 space-y-3">
+            <div className="flex items-center justify-between px-4 py-2 bg-gray-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-600">Price per item:</span>
+              <span className="text-lg font-semibold text-gray-900">
+                ${selectedDesign?.price.toFixed(2)}
+              </span>
+            </div>
+
+            <button
+              onClick={handleSaveDesign}
+              disabled={hasSelection}
+              className={`w-full px-4 py-3 rounded-lg transition-colors ${
+                hasSelection 
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white font-medium shadow-md hover:shadow-lg'
+              }`}
+            >
+              {hasSelection ? "Deselect to Add to Cart" : "Add to Cart"}
+            </button>
           </div>
-        )}
 
-        {!isTextObject && <div className="hidden md:block mt-8">
-          <h3 className="text-lg font-semibold mb-4">Decorations</h3>
-          <DecorationsList
-            decorations={decorationsList}
-            onSelect={onSelectDecoration}
-            onDelete={onDeleteDecoration}
-            selectedId={selectedObject?.id}
-          />
-        </div>}
-        
-        {showImageUpload && (
-          <ImageUpload
-            onClose={() => setShowImageUpload(false)}
-            onImageSelect={(file) => {
-              onAddImage(file);
-              setShowImageUpload(false);
-            }}
-          />
-        )}
-
-        {showDesignSelector && (
-          <DesignSelector
-            onClose={() => setShowDesignSelector(false)}
-            productType={selectedProductType}
-          />
-        )}
-
-        {showModelSelector && (
-          <ModelSelector onClose={() => setShowModelSelector(false)} />
-        )}
+        </div>
       </div>
 
-      <div className="p-4 border-t mt-auto space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
-              Quantity:
-            </label>
-            <input
-              type="number"
-              id="quantity"
-              min="1"
-              value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-20 px-3 py-1 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
-            />
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-gray-500">Price per item:</div>
-            <div className="text-lg font-semibold">${selectedDesign?.price.toFixed(2)}</div>
-          </div>
-        </div>
+      {/* Modals */}
+      {showImageUpload && (
+        <ImageUpload
+          onClose={() => setShowImageUpload(false)}
+          onImageSelect={(file) => {
+            onAddImage(file);
+            setShowImageUpload(false);
+          }}
+        />
+      )}
 
-        <div className="flex items-center justify-between py-2 border-t">
-          <div className="text-sm font-medium text-gray-700">Total:</div>
-          <div className="text-xl font-bold text-primary-600">
-            ${((selectedDesign?.price || 0) * quantity).toFixed(2)}
-          </div>
-        </div>
-
-        <button
-          onClick={handleSaveDesign}
-          disabled={hasSelection}
-          className={`w-full px-4 py-2 rounded-md transition-colors ${
-            hasSelection 
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-              : 'bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white font-medium shadow-md hover:shadow-lg'
-          }`}
-        >
-          {hasSelection ? "Deselect to Add to Cart" : `Add to Cart (${quantity})`}
-        </button>
-      </div>
+      {showModelSelector && (
+        <ModelSelector onClose={() => setShowModelSelector(false)} />
+      )}
     </div>
   );
 };

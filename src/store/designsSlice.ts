@@ -4,6 +4,7 @@ export interface Design {
   id: string;
   name: string;
   path: string;
+  thumbnailPath: string;
   productType: 'jersey' | 'sock';
   modelId: string;
   price: number;
@@ -14,13 +15,6 @@ interface DesignsState {
   designs: Design[];
   selectedDesignId: string;
   selectedProductType: 'jersey' | 'sock';
-  models: {
-    models: {
-      id: string;
-      productType: 'jersey' | 'sock';
-      isDefault: boolean;
-    }[];
-  };
 }
 
 const initialState: DesignsState = {
@@ -28,7 +22,8 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-classic',
       name: 'Classic',
-      path: 'assets/designs/jersey/soccer_jersey/classic.svg',
+      path: '/assets/designs/jersey/soccer_jersey/classic.svg',
+      thumbnailPath: '/assets/designs/jersey/soccer_jersey/classic.png',
       productType: 'jersey',
       modelId: 'jersey_1',
       price: 49.99,
@@ -37,15 +32,17 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-tiger', 
       name: 'Tiger', 
-      path: 'assets/designs/jersey/soccer_jersey/tiger.svg',
+      path: '/assets/designs/jersey/soccer_jersey/tiger.svg',
+      thumbnailPath: '/assets/designs/jersey/soccer_jersey/tiger.png',
+      productType: 'jersey',
       modelId: 'jersey_1',
-      price: 54.99,
-      productType: 'jersey'
+      price: 54.99
     },
     { 
       id: 'jersey-bones', 
       name: 'Bones', 
-      path: 'assets/designs/jersey/roundneck_jersey/bones.svg',
+      path: '/assets/designs/jersey/roundneck_jersey/bones.svg',
+      thumbnailPath: '/assets/designs/jersey/roundneck_jersey/bones.png',
       modelId: 'jersey_4',
       price: 59.99,
       productType: 'jersey'
@@ -53,7 +50,8 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-dynamic', 
       name: 'Dynamic', 
-      path: 'assets/designs/jersey/roundneck_jersey/dynamic.svg',
+      path: '/assets/designs/jersey/roundneck_jersey/dynamic.svg',
+      thumbnailPath: '/assets/designs/jersey/roundneck_jersey/dynamic.png',
       modelId: 'jersey_4',
       price: 59.99,
       productType: 'jersey'
@@ -61,7 +59,8 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-warrior', 
       name: 'Warrior', 
-      path: 'assets/designs/jersey/roundneck_jersey/warrior.svg',
+      path: '/assets/designs/jersey/roundneck_jersey/warrior.svg',
+      thumbnailPath: '/assets/designs/jersey/roundneck_jersey/warrior.png',
       modelId: 'jersey_4',
       price: 64.99,
       productType: 'jersey'
@@ -69,7 +68,8 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-pinstripes', 
       name: 'Pinstripes', 
-      path: 'assets/designs/jersey/softball_jersey/pinstripes.svg',
+      path: '/assets/designs/jersey/softball_jersey/pinstripes.svg',
+      thumbnailPath: '/assets/designs/jersey/softball_jersey/pinstripes.png',
       modelId: 'jersey_3',
       price: 54.99,
       productType: 'jersey'
@@ -77,7 +77,8 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-stripes', 
       name: 'Stripes', 
-      path: 'assets/designs/jersey/softball_jersey/stripes.svg',
+      path: '/assets/designs/jersey/softball_jersey/stripes.svg',
+      thumbnailPath: '/assets/designs/jersey/softball_jersey/stripes.png',
       modelId: 'jersey_3',
       price: 54.99,
       productType: 'jersey'
@@ -85,7 +86,8 @@ const initialState: DesignsState = {
     { 
       id: 'jersey-velocity', 
       name: 'Velocity', 
-      path: 'assets/designs/jersey/softball_jersey/velocity.svg',
+      path: '/assets/designs/jersey/softball_jersey/velocity.svg',
+      thumbnailPath: '/assets/designs/jersey/softball_jersey/velocity.png',
       modelId: 'jersey_3',
       price: 59.99,
       productType: 'jersey'
@@ -93,7 +95,8 @@ const initialState: DesignsState = {
     {
       id: 'jersey-cheer-motion',
       name: 'Cheer Motion',
-      path: 'assets/designs/jersey/cheer_jersey/motion.svg',
+      path: '/assets/designs/jersey/Cheer_Jersey/Motion.svg',
+      thumbnailPath: '/assets/designs/jersey/Cheer_Jersey/Motion.png',
       modelId: 'jersey_5',
       price: 56.99,
       productType: 'jersey'
@@ -101,7 +104,8 @@ const initialState: DesignsState = {
     {
       id: 'jersey-cheer-triangle',
       name: 'Cheer Triangle',
-      path: 'assets/designs/jersey/cheer_jersey/triangle.svg',
+      path: '/assets/designs/jersey/Cheer_Jersey/Triangle.svg',
+      thumbnailPath: '/assets/designs/jersey/Cheer_Jersey/Triangle.png',
       modelId: 'jersey_5',
       price: 56.99,
       productType: 'jersey'
@@ -109,7 +113,8 @@ const initialState: DesignsState = {
     { 
       id: 'sock-lines', 
       name: 'Lines', 
-      path: 'assets/designs/sock/lines.svg',
+      path: '/assets/designs/sock/lines.svg',
+      thumbnailPath: '/assets/designs/sock/lines.png',
       productType: 'sock',
       modelId: 'socks_1',
       price: 19.99,
@@ -117,21 +122,7 @@ const initialState: DesignsState = {
     },
   ],
   selectedDesignId: 'jersey-classic',
-  selectedProductType: 'jersey',
-  models: {
-    models: [
-      {
-        id: 'jersey_1',
-        productType: 'jersey',
-        isDefault: true
-      },
-      {
-        id: 'socks_1',
-        productType: 'sock',
-        isDefault: true
-      },
-    ],
-  },
+  selectedProductType: 'jersey'
 };
 
 export const designsSlice = createSlice({
@@ -141,23 +132,14 @@ export const designsSlice = createSlice({
     setSelectedProductType: (state, action: PayloadAction<'jersey' | 'sock'>) => {
       state.selectedProductType = action.payload;
       
-      // Find default model for this product type
-      const defaultModel = state.models.models.find(m => 
-        m.productType === action.payload && 
-        m.isDefault
+      // Find default design for this product type
+      const defaultDesign = state.designs.find(d => 
+        d.productType === action.payload && 
+        d.isDefault
       );
       
-      if (defaultModel) {
-        // Find default design for this model
-        const defaultDesign = state.designs.find(d => 
-          d.productType === action.payload && 
-          d.modelId === defaultModel.id && 
-          d.isDefault
-        );
-        
-        if (defaultDesign) {
-          state.selectedDesignId = defaultDesign.id;
-        }
+      if (defaultDesign) {
+        state.selectedDesignId = defaultDesign.id;
       }
     },
     setSelectedDesign: (state, action: PayloadAction<string>) => {
