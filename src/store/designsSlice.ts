@@ -90,6 +90,22 @@ const initialState: DesignsState = {
       price: 59.99,
       productType: 'jersey'
     },
+    {
+      id: 'jersey-cheer-motion',
+      name: 'Cheer Motion',
+      path: 'assets/designs/jersey/cheer_jersey/motion.svg',
+      modelId: 'jersey_5',
+      price: 56.99,
+      productType: 'jersey'
+    },
+    {
+      id: 'jersey-cheer-triangle',
+      name: 'Cheer Triangle',
+      path: 'assets/designs/jersey/cheer_jersey/triangle.svg',
+      modelId: 'jersey_5',
+      price: 56.99,
+      productType: 'jersey'
+    },
     { 
       id: 'sock-lines', 
       name: 'Lines', 

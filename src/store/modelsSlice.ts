@@ -40,6 +40,13 @@ const initialState: ModelsState = {
       productType: 'jersey'
     },
     {
+      id: 'jersey_5',
+      name: 'Cheer Jersey',
+      defaultDesignId: 'jersey-cheer-motion',
+      path: 'assets/3dobjects/jersey/cheer.obj',
+      productType: 'jersey'
+    },
+    {
       id: 'socks_1',
       name: 'Short Socks',
       path: 'assets/3dobjects/socks/socks_1.obj',
