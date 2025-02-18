@@ -22,6 +22,15 @@ export const Cart: React.FC = () => {
 
   const handleEdit = async (item: typeof cartItems[0]) => {
     try {
+      console.log('8. Loading saved design with pathColors:', item.pathColors);
+      
+      if (item.pathColors?.length > 0) {
+        console.log('9. Loading colors:', item.pathColors);
+        dispatch(loadSavedColors(item.pathColors));
+      } else {
+        console.warn('No pathColors found in saved design');
+      }
+
       // First load the model if available
       if (item.design?.modelId) {
         // Use setSelectedModel
@@ -37,12 +46,6 @@ export const Cart: React.FC = () => {
       if (item.decorations?.length > 0) {
         console.log('Loading decorations:', item.decorations);
         dispatch(loadSavedDecorations(item.decorations));
-      }
-      
-      // Load colors if any
-      if (item.pathColors?.length > 0) {
-        console.log('Loading colors:', item.pathColors);
-        dispatch(loadSavedColors(item.pathColors));
       }
       
       // Set the current save ID

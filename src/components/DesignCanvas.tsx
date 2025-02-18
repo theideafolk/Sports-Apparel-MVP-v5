@@ -133,25 +133,27 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
   }, [pathColors, updateTexture]);
 
   const loadDesign = useCallback(async (canvas: fabric.Canvas, path: string) => {
+    console.log('1. Starting loadDesign with path:', path);
     return new Promise<void>((resolve) => {
       canvas.clear();
 
       fabric.loadSVGFromURL(path, (objects, options) => {
         if (objects && objects.length > 0) {
-          // Filter for both path and rect elements that have fill colors
           const colorableObjects = objects.filter(obj => 
             (obj.type === 'path' || obj.type === 'rect') && 
             obj.fill && 
             typeof obj.fill === 'string'
           );
           
-          // Check if we need to initialize colors
+          console.log('2. Found colorable objects:', colorableObjects.length);
+          
           if (pathColors.length === 0 || colorableObjects.length !== pathColors.length) {
             const colors = colorableObjects.map((obj, index) => ({
               id: `path-${index}`,
               name: `Path ${index + 1}`,
               fill: obj.fill as string || '#000000'
             }));
+            console.log('3. Initializing colors:', colors);
             dispatch(setPathColors(colors));
           }
         }  

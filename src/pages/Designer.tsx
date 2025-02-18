@@ -208,6 +208,30 @@ export const Designer: React.FC = () => {
     setView('3D'); // Force 3D view when adding image
   };
 
+  const handleSelectDecoration = (id: string) => {
+    setView('3D');
+    if (designControls) {
+      const decoration = decorations.find(d => d.id === id);
+      if (decoration) {
+        designControls.updateObject(decoration.properties);
+        designControls.handleInteraction({
+          x: decoration.properties.left / 500,
+          y: decoration.properties.top / 500,
+          type: 'mousedown',
+          clientX: 0,
+          clientY: 0
+        });
+        dispatch(setSelectedDecoration(id));
+      }
+    }
+  };
+
+  const handleDeleteDecoration = (id: string) => {
+    if (designControls) {
+      dispatch(removeDecoration(id));
+    }
+  };
+
   return (
     <div className="flex h-screen">
       <div className="relative flex-1">
@@ -259,39 +283,15 @@ export const Designer: React.FC = () => {
           </div>
         )}
       </div>
-      <Sidebar 
+      <Sidebar
         onAddText={handleAddText}
-        onAddImage={(file) => {
-          setPendingImageFile(file);
-          setIsPlacingImage(true);
-          setView('3D');
-        }}
+        onAddImage={handleImageSelect}
         currentView={view}
         selectedObject={selectedObject}
-        fabricCanvas={fabricCanvas}
-        onSelectDecoration={(id) => {
-          setView('3D');
-          if (designControls) {
-            const decoration = decorations.find(d => d.id === id);
-            if (decoration) {
-              designControls.updateObject(decoration.properties);
-              designControls.handleInteraction({
-                x: decoration.properties.left / 500,
-                y: decoration.properties.top / 500,
-                type: 'mousedown',
-                clientX: 0,
-                clientY: 0
-              });
-              dispatch(setSelectedDecoration(id));
-            }
-          }
-        }}
-        onDeleteDecoration={(id) => {
-          if (designControls) {
-            dispatch(removeDecoration(id));
-          }
-        }}
+        onSelectDecoration={handleSelectDecoration}
+        onDeleteDecoration={handleDeleteDecoration}
         onUpdateSelectedObject={handleTextUpdate}
+        fabricCanvas={fabricCanvas}
         onTakeScreenshot={handleScreenshot}
         hasSelection={hasSelection}
         isPlacingImage={isPlacingImage}
