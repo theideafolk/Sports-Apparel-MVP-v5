@@ -46,8 +46,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navigate = useNavigate();
   const pathColors = useSelector((state: RootState) => state.colors.pathColors);
   
-  console.log('Sidebar pathColors from store:', pathColors);
-  
   const currentSaveId = useSelector((state: RootState) => state.cart.currentSaveId);
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [showDesignSelector, setShowDesignSelector] = useState(false);
@@ -84,9 +82,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }));
 
   const handleSaveDesign = async () => {
-    console.log('4. Starting save design');
     if (!selectedDesign || !fabricCanvas) {
-      console.log('Missing required data:', { selectedDesign, fabricCanvas });
       return;
     }
 
@@ -99,7 +95,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const preview = await onTakeScreenshot() || '';
-      console.log('5. Current pathColors:', pathColors);
       
       // Restore previous view
       setView(currentView);
@@ -147,7 +142,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       const vectorData = JSON.stringify(fabricCanvas.toJSON(['id', 'data', 'opacity']));
 
       const currentPathColors = Array.isArray(pathColors) ? pathColors : [];
-      console.log('6. Processed pathColors for save:', currentPathColors);
 
       const newDesign = {
         id: currentSaveId || Date.now().toString(),
@@ -162,9 +156,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         quantity,
       };
       
-      console.log('7. Final design object with pathColors:', newDesign.pathColors);
-
-      console.log('Dispatching to cart with design:', newDesign);
       dispatch(addToCart(newDesign));
       navigate('/cart');
     } catch (error) {
