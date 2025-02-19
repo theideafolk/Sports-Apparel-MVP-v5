@@ -37,6 +37,7 @@ export const Designer: React.FC = () => {
   const [isScreenshotting, setIsScreenshotting] = useState(false);
   const [isPlacingImage, setIsPlacingImage] = useState(false);
   const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const [isInTextProperties, setIsInTextProperties] = useState(false);
 
   const selectedModel = useSelector((state: RootState) => 
     state.models.models.find(m => m.id === state.models.selectedModelId)
@@ -138,14 +139,31 @@ export const Designer: React.FC = () => {
     if (isPlacingText && designControls) {
       designControls.addText(uv);
       setIsPlacingText(false);
+      setIsInTextProperties(true);  // Set text properties mode when adding new text
+      
+      // Get the most recently added text object
+      const lastAddedText = fabricCanvas?.getObjects().filter(obj => 
+        obj.type === 'i-text'
+      ).pop();
+      
+      if (lastAddedText) {
+        setSelectedObject(lastAddedText);
+        fabricCanvas?.setActiveObject(lastAddedText);
+        
+        // Update Redux state if the object has an ID
+        if (lastAddedText.id) {
+          dispatch(setSelectedDecoration(lastAddedText.id));
+        }
+      }
     } else if (isPlacingImage && pendingImageFile && designControls) {
       designControls.addImage(pendingImageFile, uv);
       setIsPlacingImage(false);
+      setIsInTextProperties(false);  // Ensure text properties mode is off for images
       setPendingImageFile(null);
     } else if (designControls && !isPlacingText && !isPlacingImage) {
       designControls.handleInteraction(uv);
     }
-  }, [isPlacingText, isPlacingImage, pendingImageFile, designControls]);
+  }, [isPlacingText, isPlacingImage, designControls, pendingImageFile, fabricCanvas, dispatch]);
 
   useEffect(() => {
     console.log('Controls disabled:', isPlacingText || isDraggingText);
@@ -161,47 +179,58 @@ export const Designer: React.FC = () => {
   }, []);
 
   const handleTextUpdate = useCallback(
-    debounce((updates: Partial<fabric.Object>) => {
-      if (designControls && selectedObject && selectedObject.id) {
-        // Update fabric object without re-rendering
-        selectedObject.set(updates);
-        
+    debounce((updates: Partial<fabric.Object> | null) => {
+      if (updates === null) {
+        setIsInTextProperties(false);
+        setSelectedObject(null);
         if (fabricCanvas) {
-          fabricCanvas.setActiveObject(selectedObject);
+          fabricCanvas.discardActiveObject();
+          fabricCanvas.renderAll();
         }
-
-        // Batch all updates in a single animation frame
-        requestAnimationFrame(() => {
-          // Update fabric canvas
+        dispatch(setSelectedDecoration(''));
+      } else {
+        setIsInTextProperties(true);
+        if (designControls && selectedObject && selectedObject.id) {
+          // Update fabric object without re-rendering
+          selectedObject.set(updates);
+          
           if (fabricCanvas) {
-            fabricCanvas.renderAll();
+            fabricCanvas.setActiveObject(selectedObject);
           }
 
-          // Update controls and dispatch in same frame
-          designControls.updateObject(updates);
-          dispatch(updateDecoration({
-            id: selectedObject.id,
-            properties: {
-              ...(selectedObject.type === 'i-text' ? {
-                text: updates.text || (selectedObject as fabric.IText).text,
-                fontFamily: (selectedObject as fabric.IText).fontFamily,
-                fill: (selectedObject as fabric.IText).fill as string,
-                strokeWidth: (selectedObject as fabric.IText).strokeWidth,
-                stroke: (selectedObject as fabric.IText).stroke,
-              } : {
-                src: (selectedObject as fabric.Image).getSrc(),
-              }),
-              left: selectedObject.left,
-              top: selectedObject.top,
-              scaleX: selectedObject.scaleX,
-              scaleY: selectedObject.scaleY,
-              angle: selectedObject.angle,
-              ...updates
+          // Batch all updates in a single animation frame
+          requestAnimationFrame(() => {
+            // Update fabric canvas
+            if (fabricCanvas) {
+              fabricCanvas.renderAll();
             }
-          }));
-        });
+
+            // Update controls and dispatch in same frame
+            designControls.updateObject(updates);
+            dispatch(updateDecoration({
+              id: selectedObject.id,
+              properties: {
+                ...(selectedObject.type === 'i-text' ? {
+                  text: updates.text || (selectedObject as fabric.IText).text,
+                  fontFamily: (selectedObject as fabric.IText).fontFamily,
+                  fill: (selectedObject as fabric.IText).fill as string,
+                  strokeWidth: (selectedObject as fabric.IText).strokeWidth,
+                  stroke: (selectedObject as fabric.IText).stroke,
+                } : {
+                  src: (selectedObject as fabric.Image).getSrc(),
+                }),
+                left: selectedObject.left,
+                top: selectedObject.top,
+                scaleX: selectedObject.scaleX,
+                scaleY: selectedObject.scaleY,
+                angle: selectedObject.angle,
+                ...updates
+              }
+            }));
+          });
+        }
       }
-    }, 32), // Increased debounce time to reduce updates
+    }, 32),
     [designControls, selectedObject, fabricCanvas, dispatch]
   );
 
@@ -229,12 +258,15 @@ export const Designer: React.FC = () => {
         // Set selected decoration in Redux
         dispatch(setSelectedDecoration(id));
         
-        // Set selected object for text properties
+        // Set selected object and text properties state
         if (decoration.type === 'text') {
           const textObject = fabricCanvas?.getObjects().find(obj => obj.id === id);
           if (textObject) {
             setSelectedObject(textObject);
+            setIsInTextProperties(true); // Set to true for text objects
           }
+        } else {
+          setIsInTextProperties(false); // Set to false for non-text objects
         }
       }
     }
@@ -245,6 +277,12 @@ export const Designer: React.FC = () => {
       dispatch(removeDecoration(id));
     }
   };
+
+  useEffect(() => {
+    if (!selectedObject || selectedObject.type !== 'i-text') {
+      setIsInTextProperties(false);
+    }
+  }, [selectedObject]);
 
   return (
     <div className="flex h-screen">
@@ -278,7 +316,7 @@ export const Designer: React.FC = () => {
             canvasTexture={canvasTexture} 
             onInteract={handleInteract}
             hasSelection={hasSelection}
-            disableControls={isPlacingText || isDraggingText}
+            disableControls={isPlacingText || isDraggingText || isInTextProperties}
             isScreenshotting={isScreenshotting}
           />
         </div>
