@@ -492,6 +492,41 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
     }
   }, [updateTexture]);
 
+  const saveObjectPosition = (obj: fabric.Object) => {
+    if (!obj || !obj.id) return;
+
+    const finalPosition = {
+      left: obj.left,
+      top: obj.top,
+      scaleX: obj.scaleX,
+      scaleY: obj.scaleY,
+      angle: obj.angle
+    };
+    
+    storedPositionsRef.current.set(obj.id, finalPosition);
+    
+    // Create properties object based on object type
+    let properties;
+    if (obj.type === 'i-text') {
+      properties = {
+        ...finalPosition,
+        text: (obj as fabric.IText).text,
+        fontFamily: (obj as fabric.IText).fontFamily,
+        fill: (obj as fabric.IText).fill as string
+      };
+    } else {
+      properties = {
+        ...finalPosition,
+        src: (obj as fabric.Image).getSrc()
+      };
+    }
+
+    dispatch(updateDecoration({
+      id: obj.id,
+      properties
+    }));
+  };
+
   const initializeCanvas = useCallback(async () => {
     if (!canvasRef.current || fabricCanvasRef.current) return;
 
@@ -549,7 +584,11 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
         handleRender();
       });
 
-      canvas.on('selection:updated', () => {
+      canvas.on('selection:updated', (e) => {
+        if (e.deselected && e.deselected[0]) {
+          // Save position of previously selected object
+          saveObjectPosition(e.deselected[0]);
+        }
         selectionChangeCallbackRef.current?.(true);
         controlsRef.current.onObjectSelected?.(canvas.getActiveObject());
         handleRender();
@@ -557,43 +596,7 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
 
       canvas.on('selection:cleared', (e) => {
         if (isEditingRef.current && e.deselected?.[0]) {
-          const deselectedObject = e.deselected[0];
-          
-          // Store final position for both text and image objects
-          if ((deselectedObject.type === 'i-text' || deselectedObject.type === 'image') && deselectedObject.id) {
-            const finalPosition = {
-              left: deselectedObject.left,
-              top: deselectedObject.top,
-              scaleX: deselectedObject.scaleX,
-              scaleY: deselectedObject.scaleY,
-              angle: deselectedObject.angle
-            };
-            
-            console.log('Storing final position for:', deselectedObject.id, finalPosition);
-            storedPositionsRef.current.set(deselectedObject.id, finalPosition);
-            
-            // Create properties object based on object type
-            let properties;
-            if (deselectedObject.type === 'i-text') {
-              properties = {
-                ...finalPosition,
-                text: (deselectedObject as fabric.IText).text,
-                fontFamily: (deselectedObject as fabric.IText).fontFamily,
-                fill: (deselectedObject as fabric.IText).fill as string
-              };
-            } else {
-              properties = {
-                ...finalPosition,
-                src: (deselectedObject as fabric.Image).getSrc()
-              };
-            }
-
-            // Update state with the correct properties
-            dispatch(updateDecoration({
-              id: deselectedObject.id,
-              properties
-            }));
-          }
+          saveObjectPosition(e.deselected[0]);
         }
         
         isEditingRef.current = false;
