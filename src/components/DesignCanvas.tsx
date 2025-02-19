@@ -56,6 +56,10 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
   const storedPositionsRef = useRef<Map<string, any>>(new Map());
   const isEditingRef = useRef<boolean>(false);
 
+  const debouncedTextureUpdate = useRef(debounce((canvas: fabric.Canvas) => {
+    updateTexture();
+  }, 16)); // roughly one frame at 60fps
+
   const updateObjectState = useCallback((obj: fabric.Object) => {
     if (!obj || !obj.id) return;
 
@@ -708,15 +712,17 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
             if (storedPosition) {
               e.target.set(storedPosition);
               fabricCanvasRef.current?.renderAll();
-              updateTexture();
             }
           }
           
-          requestAnimationFrame(() => {
-            updateObjectState(e.target);
-            fabricCanvasRef.current?.renderAll();
-            updateTexture();
-          });
+          // Update object state without immediate texture update
+          updateObjectState(e.target);
+          fabricCanvasRef.current?.renderAll();
+          
+          // Debounce texture updates during active modification
+          if (fabricCanvasRef.current) {
+            debouncedTextureUpdate.current(fabricCanvasRef.current);
+          }
         }
       };
 
@@ -770,6 +776,13 @@ export const DesignCanvas: React.FC<DesignCanvasProps> = ({
             canvas.renderAll();
             updateTexture();
           }
+        }
+      });
+
+      canvas.on('mouse:up', () => {
+        if (fabricCanvasRef.current) {
+          debouncedTextureUpdate.current.flush(); // Force final update
+          updateTexture(); // Ensure final state is reflected
         }
       });
 
